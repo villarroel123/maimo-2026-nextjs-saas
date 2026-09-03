@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { getPublishedItem } from "@/lib/items/items";
+import { getPublishedTicket } from "@/lib/tickets/tickets";
 import { getCurrentUserProfile } from "@/lib/users/users";
-
 export const dynamic = "force-dynamic";
 
 function formatDate(value) {
@@ -21,7 +20,7 @@ function formatDate(value) {
 
 export default async function PublicItemPage({ params }) {
   const { id } = await params;
-  const [item, user] = await Promise.all([getPublishedItem(id), getCurrentUser()]);
+  const [item, user] = await Promise.all([getPublishedTicket(id), getCurrentUser()]);
   const profile = user ? await getCurrentUserProfile(user) : null;
 
   if (!item) {
@@ -39,7 +38,7 @@ export default async function PublicItemPage({ params }) {
           isOwner ? (
             <Link
               className="inline-flex h-10 w-full items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-zinc-950 transition hover:border-cyan-300 hover:bg-cyan-300 sm:w-auto"
-              href={`/dashboard/items/${item.id}/edit`}
+              href={`/dashboard/tickets/${item.id}/edit`}
             >
               Editar
             </Link>

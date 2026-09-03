@@ -64,7 +64,7 @@ export async function updateUser(uid, formData) {
   await updateManagedUser(uid, parseUserForm(formData));
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/users");
-  redirect("/dashboard/users");
+  // Eliminamos el redirect() de aquí adentro para evitar el conflicto de estados en cliente
 }
 
 export async function deleteUser(uid) {

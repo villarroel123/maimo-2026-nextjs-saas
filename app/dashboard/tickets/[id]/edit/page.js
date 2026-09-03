@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import ItemForm from "@/components/items/ItemForm";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { getUserItem } from "@/lib/items/items";
+import { getUserTicket } from "@/lib/tickets/tickets";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { updateItem } from "../../actions";
 
@@ -18,7 +18,7 @@ export default async function EditItemPage({ params }) {
   }
 
   const { id } = await params;
-  const item = await getUserItem(user.uid, id);
+  const item = await getUserTicket(user.uid, id);
   const profile = await getCurrentUserProfile(user);
   const useFirebaseStorage = process.env.FIREBASE_STORAGE === "true";
 

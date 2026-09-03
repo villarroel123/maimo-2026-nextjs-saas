@@ -2,7 +2,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { listPublishedItems } from "@/lib/items/items";
+import { listPublishedTickets } from "@/lib/tickets/tickets";
 import { getCurrentUserProfile } from "@/lib/users/users";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const user = await getCurrentUser();
   const profile = user ? await getCurrentUserProfile(user) : null;
-  const publishedItems = await listPublishedItems();
+  const publishedItems = await listPublishedTickets();
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">

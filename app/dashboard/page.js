@@ -3,7 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { listUserItems } from "@/lib/items/items";
+import { listUserTickets } from "@/lib/tickets/tickets";
 import { getCurrentUserProfile, listUserProfiles } from "@/lib/users/users";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const items = await listUserItems(user.uid);
+  const items = await listUserTickets(user.uid);
   const profile = await getCurrentUserProfile(user);
   const isAdmin = profile?.user_type === "admin";
   const users = isAdmin ? await listUserProfiles() : [];
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
           </p>
           <Link
             className="mt-5 inline-flex h-10 w-full items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-zinc-950 transition hover:border-cyan-300 hover:bg-cyan-300 sm:w-auto"
-            href="/dashboard/items"
+            href="/dashboard/tickets"
           >
             Ver items
           </Link>

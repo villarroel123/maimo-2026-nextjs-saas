@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import ItemForm from "@/components/items/ItemForm";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { listUserItems } from "@/lib/items/items";
+import { listUserTickets } from "@/lib/tickets/tickets";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { createItem, deleteItem } from "./actions";
 
@@ -28,7 +28,7 @@ export default async function ItemsPage() {
     redirect("/login");
   }
 
-  const items = await listUserItems(user.uid);
+  const items = await listUserTickets(user.uid);
   const profile = await getCurrentUserProfile(user);
   const useFirebaseStorage = process.env.FIREBASE_STORAGE === "true";
 
@@ -41,7 +41,7 @@ export default async function ItemsPage() {
             Firestore
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-normal text-zinc-50 sm:text-5xl lg:text-6xl">
-            Items
+            Tickets
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400">
             ABM base con documentos asociados al usuario autenticado.
@@ -49,14 +49,14 @@ export default async function ItemsPage() {
         </div>
       </header>
 
-      <section className="mx-auto mt-7 grid w-full max-w-6xl gap-6 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(280px,360px)_1fr]">
+      <section className="mx-auto mt-7 grid w-full max-w-6xl gap-6 px-4 sm:px-6 lg:px-8 lg:grid-cols-[420px_1fr]">
         <div>
           <h2 className="mb-3 text-lg font-semibold text-zinc-100">
-            Crear item
+            Crear ticket
           </h2>
           <ItemForm
             action={createItem}
-            submitLabel="Crear item"
+            submitLabel="Crear ticket"
             useFirebaseStorage={useFirebaseStorage}
           />
         </div>
@@ -64,14 +64,14 @@ export default async function ItemsPage() {
         <div>
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-zinc-100">
-              Mis items
+              Mis tickets
             </h2>
             <span className="text-sm text-zinc-500">{items.length} total</span>
           </div>
 
           {items.length === 0 ? (
             <div className="border border-zinc-800 p-6 text-sm leading-6 text-zinc-400">
-              Todavia no hay items cargados para este usuario.
+              Todavia no hay tickets cargados para este usuario.
             </div>
           ) : (
             <div className="grid gap-px overflow-hidden border border-zinc-800 bg-zinc-800">
@@ -102,11 +102,38 @@ export default async function ItemsPage() {
                         {item.published ? "published" : "draft"}
                       </span>
                     </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-zinc-400 sm:grid-cols-4">
+                      {item.artist && <div>Artista: <strong className="text-zinc-200">{item.artist}</strong></div>}
+                      {item.venue && <div>Estadio: <strong className="text-zinc-200">{item.venue}</strong></div>}
+                      {item.eventDate && <div>Fecha: <strong className="text-zinc-200">{item.eventDate}</strong></div>}
+                      {item.sector && <div>Sector: <strong className="text-zinc-200">{item.sector}</strong></div>}
+                      {item.originalPrice !== undefined && <div>Original: <strong className="text-zinc-200">${item.originalPrice}</strong></div>}
+                    </div>
+
+                    {(item.resalePrice !== undefined || item.reasonForSale) && (
+                      <div className="mt-3 flex items-center justify-between border border-zinc-800 bg-zinc-900/50 p-3 text-sm">
+                        {item.resalePrice !== undefined && (
+                          <div>
+                            <span className="text-xs text-zinc-500 block">Precio de Reventa:</span>
+                            <span className="font-bold text-emerald-400">${item.resalePrice}</span>
+                          </div>
+                        )}
+                        {item.reasonForSale && (
+                          <div className="text-right">
+                            <span className="text-xs text-zinc-500 block">Motivo:</span>
+                            <span className="text-xs italic text-zinc-300">{item.reasonForSale}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {item.description ? (
                       <p className="mt-3 overflow-wrap-anywhere text-sm leading-6 text-zinc-400">
                         {item.description}
                       </p>
                     ) : null}
+
                     <p className="mt-3 text-xs text-zinc-600">
                       Creado: {formatDate(item.createdAt)}
                     </p>

@@ -1,256 +1,215 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { getClientAuth } from "@/lib/firebase/client";
-import { uploadEntityImage } from "@/lib/firebase/storage";
+import { useState } from "react";
 
-function normalizeLocalImagePath(imageName, imageBasePath) {
-  const value = String(imageName || "").trim();
-
-  if (!value) {
-    return "";
-  }
-
-  if (value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://")) {
-    return value;
-  }
-
-  return `/${imageBasePath}/${value}`;
-}
-
-function getLocalImageInputValue(imageUrl, imageBasePath) {
-  const value = String(imageUrl || "");
-  const prefix = `/${imageBasePath}/`;
-
-  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
-}
-
-export default function ItemForm({
-  action,
-  imageBasePath = "items",
-  item,
-  storageItemId,
-  submitLabel = "Guardar",
-  useFirebaseStorage = false,
-}) {
-  const cleanImageBasePath = useMemo(
-    () => imageBasePath.replace(/^\/+|\/+$/g, "") || "items",
-    [imageBasePath],
-  );
-  const [error, setError] = useState("");
+export default function ItemForm({ action, initialData = {}, submitLabel = "Guardar", useFirebaseStorage = false }) {
   const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(item?.imageUrl || "");
-  const [objectPreviewUrl, setObjectPreviewUrl] = useState("");
-
-  useEffect(() => {
-    return () => {
-      if (objectPreviewUrl) {
-        URL.revokeObjectURL(objectPreviewUrl);
-      }
-    };
-  }, [objectPreviewUrl]);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    setError("");
-    setLoading(true);
-
-    try {
-      const formData = new FormData(form);
-
-      if (useFirebaseStorage) {
-        const imageFile = formData.get("imageFile");
-        const hasNewImage = imageFile instanceof File && imageFile.size > 0;
-        formData.delete("imageFile");
-
-        if (hasNewImage) {
-          const currentUser = getClientAuth().currentUser;
-
-          if (!currentUser) {
-            throw new Error("Tenes que iniciar sesion para subir imagenes.");
-          }
-
-          const uploadedImage = await uploadEntityImage({
-            entity: cleanImageBasePath,
-            file: imageFile,
-            itemId: storageItemId || item?.id || "uploads",
-            userId: currentUser.uid,
-          });
-
-          formData.set("imageUrl", uploadedImage.imageUrl);
-          formData.set("imagePath", uploadedImage.imagePath);
-        } else {
-          formData.set("imageUrl", item?.imageUrl || "");
-          formData.set("imagePath", item?.imagePath || "");
-        }
-      } else {
-        const imageName = String(formData.get("imageUrl") || "").trim();
-        formData.set(
-          "imageUrl",
-          normalizeLocalImagePath(imageName, cleanImageBasePath),
-        );
-        formData.set("imagePath", "");
-      }
-
-      await action(formData);
-      if (!item) {
-        form.reset();
-        setPreviewUrl("");
-        setObjectPreviewUrl("");
-      }
-    } catch (err) {
-      setError(err.message || "No se pudo guardar el item.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <form
-      onSubmit={handleSubmit}
-      className="grid min-w-0 gap-4 border border-zinc-800 p-4 sm:p-5"
+      action={async (formData) => {
+        setLoading(true);
+        try {
+          await action(formData);
+        } finally {
+          setLoading(false);
+        }
+      }}
+      className="grid gap-4 border border-zinc-800 bg-zinc-950 p-4 sm:p-6"
     >
-      <label className="grid gap-2 text-sm font-medium text-zinc-300">
-        <span>Titulo</span>
+      {/* Título */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="title">
+          Título *
+        </label>
         <input
-          className="h-11 border border-zinc-800 bg-zinc-950 px-3 text-zinc-100 outline-none transition focus:border-cyan-400"
+          className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+          defaultValue={initialData.title || ""}
+          id="title"
           name="title"
-          defaultValue={item?.title || ""}
-          disabled={loading}
           required
+          type="text"
+          placeholder="Ej: Entrada campo delantero"
         />
-      </label>
+      </div>
 
-      <label className="grid gap-2 text-sm font-medium text-zinc-300">
-        <span>Descripcion</span>
-        <textarea
-          className="min-h-28 resize-y border border-zinc-800 bg-zinc-950 px-3 py-3 text-zinc-100 outline-none transition focus:border-cyan-400"
-          name="description"
-          defaultValue={item?.description || ""}
-          disabled={loading}
-        />
-      </label>
-
-      <label className="grid gap-2 text-sm font-medium text-zinc-300">
-        <span>Estado</span>
-        <select
-          className="h-11 border border-zinc-800 bg-zinc-950 px-3 text-zinc-100 outline-none transition focus:border-cyan-400"
-          name="status"
-          defaultValue={item?.status || "pending"}
-          disabled={loading}
-        >
-          <option value="pending">Pendiente</option>
-          <option value="active">Activo</option>
-          <option value="completed">Completado</option>
-        </select>
-      </label>
-
-      <label className="grid gap-2 text-sm font-medium text-zinc-300">
-        <span>Imagen</span>
-        {useFirebaseStorage ? (
-          <>
-            <input
-              name="imageUrl"
-              type="hidden"
-              defaultValue={item?.imageUrl || ""}
-            />
-            <input
-              name="imagePath"
-              type="hidden"
-              defaultValue={item?.imagePath || ""}
-            />
-            <input
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="min-w-0 border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none transition file:mr-4 file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-zinc-100 hover:file:bg-zinc-700 focus:border-cyan-400"
-              name="imageFile"
-              type="file"
-              disabled={loading}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-
-                if (!file) {
-                  setObjectPreviewUrl("");
-                  setPreviewUrl(item?.imageUrl || "");
-                  return;
-                }
-
-                const nextPreviewUrl = URL.createObjectURL(file);
-                setObjectPreviewUrl(nextPreviewUrl);
-                setPreviewUrl(nextPreviewUrl);
-              }}
-            />
-            <span className="text-sm font-normal leading-6 text-zinc-500">
-              Modo Storage activo. Requiere Cloud Storage for Firebase y plan Blaze.
-              Formatos admitidos: JPG, PNG, WEBP o GIF. Tamano maximo: 2 MB.
-            </span>
-          </>
-        ) : (
-          <>
-            <input
-              className="h-11 border border-zinc-800 bg-zinc-950 px-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-cyan-400"
-              name="imageUrl"
-              type="text"
-              defaultValue={getLocalImageInputValue(
-                item?.imageUrl,
-                cleanImageBasePath,
-              )}
-              disabled={loading}
-              placeholder="imagen.jpg"
-              onChange={(event) => {
-                const value = event.target.value.trim();
-                setPreviewUrl(normalizeLocalImagePath(value, cleanImageBasePath));
-              }}
-            />
-            <span className="text-sm font-normal leading-6 text-zinc-500">
-              Guardar la imagen en `public/{cleanImageBasePath}` y escribir solamente
-              el nombre del archivo, por ejemplo `imagen.jpg`.
-            </span>
-          </>
-        )}
-      </label>
-
-      {previewUrl ? (
-        <div className="border border-zinc-800 bg-zinc-900">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            alt="Preview del item"
-            className="h-44 w-full object-cover"
-            src={previewUrl}
+      {/* Grid interno adaptativo con lg:grid-cols-2 para evitar colapsos tempranos */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="artist">
+            Artista / Banda
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.artist || ""}
+            id="artist"
+            name="artist"
+            type="text"
+            placeholder="Ej: Coldplay"
           />
         </div>
-      ) : null}
 
-      <label className="flex items-start gap-3 border border-zinc-800 p-3 text-sm font-medium text-zinc-300">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="venue">
+            Estadio / Recinto
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.venue || ""}
+            id="venue"
+            name="venue"
+            type="text"
+            placeholder="Ej: River Plate"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="eventDate">
+            Fecha del evento
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.eventDate || ""}
+            id="eventDate"
+            name="eventDate"
+            type="text"
+            placeholder="Ej: 15 de Noviembre"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="sector">
+            Sector / Ubicación
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.sector || ""}
+            id="sector"
+            name="sector"
+            type="text"
+            placeholder="Ej: Sívori Alta"
+          />
+        </div>
+      </div>
+
+      {/* Precios */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="originalPrice">
+            Precio Original ($)
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.originalPrice || ""}
+            id="originalPrice"
+            name="originalPrice"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="resalePrice">
+            Precio de Reventa ($)
+          </label>
+          <input
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.resalePrice || ""}
+            id="resalePrice"
+            name="resalePrice"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+
+      {/* Motivo de venta */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="reasonForSale">
+          Motivo de la venta
+        </label>
         <input
-          className="mt-1 size-4 border border-zinc-700 bg-zinc-950 accent-cyan-400"
-          name="published"
-          type="checkbox"
-          defaultChecked={Boolean(item?.published)}
-          disabled={loading}
+          className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+          defaultValue={initialData.reasonForSale || ""}
+          id="reasonForSale"
+          name="reasonForSale"
+          type="text"
+          placeholder="Ej: No puedo asistir por viaje"
         />
-        <span>
-          Publicado
-          <span className="mt-1 block text-sm font-normal leading-6 text-zinc-500">
-            Si esta activo, el item se mostrara en la home publica y tendra una
-            ruta publica propia.
-          </span>
-        </span>
-      </label>
+      </div>
+
+      {/* Estado y Publicado */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 items-center">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="status">
+            Estado
+          </label>
+          <select
+            className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+            defaultValue={initialData.status || "disponible"}
+            id="status"
+            name="status"
+          >
+            <option value="disponible">Disponible</option>
+            <option value="reservado">Reservado</option>
+            <option value="vendido">Vendido</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3 pt-5">
+          <input
+            className="h-4 w-4 accent-cyan-400"
+            defaultChecked={initialData.published ?? true}
+            id="published"
+            name="published"
+            type="checkbox"
+          />
+          <label className="text-sm text-zinc-300" htmlFor="published">
+            Publicado visible
+          </label>
+        </div>
+      </div>
+
+      {/* Descripción general */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="description">
+          Descripción adicional
+        </label>
+        <textarea
+          className="min-h-[90px] w-full border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+          defaultValue={initialData.description || ""}
+          id="description"
+          name="description"
+          placeholder="Detalles extras..."
+        />
+      </div>
+
+      {/* URL de Imagen */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400" htmlFor="imageUrl">
+          URL de la Imagen del Ticket
+        </label>
+        <input
+          className="h-10 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-cyan-400 focus:outline-none"
+          defaultValue={initialData.imageUrl || ""}
+          id="imageUrl"
+          name="imageUrl"
+          type="url"
+          placeholder="https://..."
+        />
+      </div>
 
       <button
-        className="h-11 w-full border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-zinc-950 transition hover:border-cyan-300 hover:bg-cyan-300"
+        className="mt-2 inline-flex h-10 w-full items-center justify-center bg-cyan-500 px-4 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400 disabled:opacity-50"
         disabled={loading}
         type="submit"
       >
         {loading ? "Guardando..." : submitLabel}
       </button>
-
-      {error ? (
-        <p className="border border-red-900/70 bg-red-950/40 p-3 text-sm leading-6 text-red-300">
-          {error}
-        </p>
-      ) : null}
     </form>
   );
 }
