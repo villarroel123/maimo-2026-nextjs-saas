@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { createFanProject } from "@/lib/projects/projects";
+import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,10 @@ async function handleCreateActivity(formData) {
     const titulo = formData.get("titulo");
     const descripcion = formData.get("descripcion");
     const elementos = formData.get("elementos"); 
+    const estado = formData.get("estado");
+    const instruccionesPorSector = formData.get("instruccionesPorSector");
 
-    const res = await createFanProject(id, { titulo, descripcion, elementos });
+    const res = await createFanProject(id, { titulo, descripcion, elementos, estado, instruccionesPorSector });
     if (res.success) {
       redirect(`/dashboard/projects/${id}`);
     }
@@ -74,6 +77,40 @@ async function handleCreateActivity(formData) {
             placeholder="Ej: celular, celofán rojo"
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">
+            Estado
+          </label>
+          <select
+            name="estado"
+            defaultValue="planificado"
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          >
+            {FANPROJECT_STATUSES.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="instruccionesPorSector">
+            Instrucciones por sector
+          </label>
+          <textarea
+            id="instruccionesPorSector"
+            name="instruccionesPorSector"
+            rows={5}
+            placeholder={"Sívori Alta | Encendé la linterna durante el estribillo.\nCampo delantero | Levantá el cartel cuando comience la canción."}
+            aria-describedby="sector-instructions-help"
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          />
+          <p id="sector-instructions-help" className="mt-2 text-xs text-[#8A5468]">
+            Escribí una indicación por línea, separando el sector y la instrucción con |.
+          </p>
         </div>
 
         <button 

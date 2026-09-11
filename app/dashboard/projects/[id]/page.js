@@ -4,6 +4,7 @@ import { getProjectWithDetails, deleteFanProject } from "@/lib/projects/projects
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import DeleteActivityButton from "@/components/DeleteActivityButton";
+import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,10 @@ export default async function AdminProjectDetailPage({ params }) {
             No hay actividades registradas para este concierto todavía.
           </div>
         ) : (
-          project.subitems.map((activity) => (
+          project.subitems.map((activity) => {
+            const status = getFanProjectStatus(activity.estado);
+
+            return (
             <div 
               key={activity.id} 
               className="border border-[#F2B8CF] bg-[#FFE4F3] p-4 rounded-xl flex justify-between items-center gap-4"
@@ -74,6 +78,9 @@ export default async function AdminProjectDetailPage({ params }) {
               <div>
                 <h3 className="text-base font-bold text-[#5C1F3A]">{activity.titulo}</h3>
                 <p className="text-xs text-[#8A5468] line-clamp-1 mt-0.5">{activity.descripcion}</p>
+                <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.badgeClassName}`}>
+                  {status.label}
+                </span>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -93,7 +100,8 @@ export default async function AdminProjectDetailPage({ params }) {
                 />
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </main>

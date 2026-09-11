@@ -30,6 +30,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
 
@@ -41,6 +42,22 @@ export default function LoginForm() {
     router.refresh();
   }
 
+  function getGoogleLoginErrorMessage(err) {
+    if (err?.code === "auth/unauthorized-domain") {
+      return "Este dominio no está autorizado para iniciar sesión con Google.";
+    }
+
+    if (err?.code === "auth/operation-not-allowed") {
+      return "El inicio de sesión con Google no está habilitado en Firebase.";
+    }
+
+    if (err?.code === "auth/popup-blocked") {
+      return "El navegador bloqueó la ventana de Google. Habilitá las ventanas emergentes e intentá nuevamente.";
+    }
+
+    return "No se pudo iniciar sesión con Google. Intentá nuevamente.";
+  }
+
   async function handleEmailSubmit(event) {
     event.preventDefault();
     setLoading(true);
@@ -48,6 +65,7 @@ export default function LoginForm() {
       mode === "signup" ? "Creando cuenta..." : "Iniciando sesion...",
     );
     setError("");
+    setNotice("");
 
     try {
       const action =
@@ -67,11 +85,21 @@ export default function LoginForm() {
     setLoading(true);
     setLoadingMessage("Conectando con Google...");
     setError("");
+    setNotice("");
 
     try {
       await finishLogin(await signInWithPopup(getClientAuth(), getGoogleProvider()));
     } catch (err) {
-      setError(err.message || "No se pudo iniciar sesion con Google.");
+      if (err?.code === "auth/popup-closed-by-user") {
+        setNotice(
+          "No se completó el inicio con Google. Elegí una cuenta y mantené abierta la ventana de Google. Si no aparece, abrí el sitio en Chrome o Edge y permití las ventanas emergentes.",
+        );
+        setLoading(false);
+        setLoadingMessage("");
+        return;
+      }
+
+      setError(getGoogleLoginErrorMessage(err));
       setLoading(false);
       setLoadingMessage("");
     }
@@ -178,6 +206,12 @@ export default function LoginForm() {
       {error ? (
         <p className="mt-5 border border-red-900/70 bg-red-950/40 p-3 text-sm leading-6 text-red-300">
           {error}
+        </p>
+      ) : null}
+
+      {notice ? (
+        <p className="mt-5 border border-cyan-900/70 bg-cyan-950/40 p-3 text-sm leading-6 text-cyan-200">
+          {notice}
         </p>
       ) : null}
 

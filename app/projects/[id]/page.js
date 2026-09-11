@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProjectWithDetails } from "@/lib/projects/projects";
+import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +34,17 @@ export default async function ProjectDetailPage({ params }) {
         {project.subitems.length === 0 ? (
           <p className="text-sm text-[#8A5468]">No hay actividades cargadas para este concierto todavía.</p>
         ) : (
-          project.subitems.map((sub) => (
+          project.subitems.map((sub) => {
+            const status = getFanProjectStatus(sub.estado);
+
+            return (
             <div key={sub.id} className="border border-[#F2B8CF] p-5 rounded-xl bg-[#FFE4F3]">
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.badgeClassName}`}>
+                {status.label}
+              </span>
               <Link 
                 href={`/projects/${project.id}/activities/${sub.id}`}
-                className="text-lg font-semibold text-[#C0567A] hover:underline block"
+                className="mt-3 text-lg font-semibold text-[#C0567A] hover:underline block"
               >
                 {sub.titulo}
               </Link>
@@ -55,7 +62,8 @@ export default async function ProjectDetailPage({ params }) {
                 </div>
               ) : null}
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </main>

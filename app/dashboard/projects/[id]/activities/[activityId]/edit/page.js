@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { getActivityDetails, updateFanProject } from "@/lib/projects/projects";
+import { FANPROJECT_STATUSES, getFanProjectStatus } from "@/lib/projects/fanproject-status";
+import { sectorInstructionsToText } from "@/lib/projects/sector-instructions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +24,17 @@ export default async function EditActivityPage({ params }) {
     const titulo = formData.get("titulo");
     const descripcion = formData.get("descripcion");
     const elementos = formData.get("elementos");
+    const estado = formData.get("estado");
+    const instruccionesPorSector = formData.get("instruccionesPorSector");
 
-    const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos });
+    const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos, estado, instruccionesPorSector });
     if (res.success) {
       redirect(`/dashboard/projects/${id}`);
     }
   }
 
   const elementosStr = Array.isArray(activity.elementos) ? activity.elementos.join(", ") : "";
+  const instruccionesPorSector = sectorInstructionsToText(activity.instruccionesPorSector);
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-xl mx-auto">
@@ -79,6 +84,40 @@ export default async function EditActivityPage({ params }) {
             defaultValue={elementosStr}
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">
+            Estado
+          </label>
+          <select
+            name="estado"
+            defaultValue={getFanProjectStatus(activity.estado).value}
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          >
+            {FANPROJECT_STATUSES.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="instruccionesPorSector">
+            Instrucciones por sector
+          </label>
+          <textarea
+            id="instruccionesPorSector"
+            name="instruccionesPorSector"
+            rows={5}
+            defaultValue={instruccionesPorSector}
+            aria-describedby="sector-instructions-help"
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          />
+          <p id="sector-instructions-help" className="mt-2 text-xs text-[#8A5468]">
+            Una línea por sector, usando el formato: Sector | Instrucción.
+          </p>
         </div>
 
         <button 
