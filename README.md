@@ -156,6 +156,11 @@ FIREBASE_STORAGE=false
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Resend: notificaciones por email (solo servidor)
+RESEND_API_KEY=
+RESEND_FROM_EMAIL="Narabi <novedades@tu-dominio.com>"
+APP_URL=http://localhost:3000
 ```
 
 Las variables con prefijo `NEXT_PUBLIC_` son visibles desde el cliente. Las variables `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` y `FIREBASE_PRIVATE_KEY` son privadas y se utilizan desde Firebase Admin SDK en el servidor.
@@ -163,6 +168,18 @@ Las variables con prefijo `NEXT_PUBLIC_` son visibles desde el cliente. Las vari
 La clave privada debe conservar los saltos de linea escapados mediante `\n`.
 
 El archivo `.env` no debe subirse al repositorio.
+
+## Notificaciones Y Email
+
+Cuando un administrador cambia la fecha/horario o la ubicación de un concierto, o el estado de un fanproject, Narabi crea una notificación interna para quienes lo guardaron en Favoritos. Cada persona puede elegir en `/favorites` si también desea recibir esos avisos por email.
+
+El envío se realiza únicamente en el servidor mediante la API de Resend. Para activarlo:
+
+1. Crear una API key en Resend y verificar el dominio/remitente.
+2. Cargar `RESEND_API_KEY` y `RESEND_FROM_EMAIL` como **Secret** en Vercel.
+3. Cargar `APP_URL` con la URL productiva del sitio, por ejemplo `https://maimo-2026-nextjs-saas.vercel.app`.
+
+Si estas variables no existen, la notificación interna continúa funcionando y el email se omite de forma segura.
 
 ## Scripts
 

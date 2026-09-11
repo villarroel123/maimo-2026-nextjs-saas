@@ -5,6 +5,8 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { getActivityDetails, updateFanProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES, getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { sectorInstructionsToText } from "@/lib/projects/sector-instructions";
+import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
+import { requireAdmin } from "@/lib/users/authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +23,32 @@ export default async function EditActivityPage({ params }) {
 
   async function handleUpdateActivity(formData) {
     "use server";
-    const titulo = formData.get("titulo");
-    const descripcion = formData.get("descripcion");
-    const elementos = formData.get("elementos");
-    const estado = formData.get("estado");
-    const instruccionesPorSector = formData.get("instruccionesPorSector");
+    await requireAdmin();
+    const titulo = String(formData.get("titulo") || "").trim();
+    const descripcion = String(formData.get("descripcion") || "").trim();
+    const elementos = String(formData.get("elementos") || "");
+    const estado = String(formData.get("estado") || "");
+    const instruccionesPorSector = String(formData.get("instruccionesPorSector") || "");
+
+    if (!titulo || !descripcion) {
+      throw new Error("Completá el título y la descripción del fanproject.");
+    }
 
     const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos, estado, instruccionesPorSector });
     if (res.success) {
+      if (res.statusChanged) {
+        try {
+          await notifyFavoriteUsers({
+            projectId: id,
+            title: `Nuevo estado: ${res.title}`,
+            message: `El fanproject que guardaste ahora está: ${res.statusLabel}.`,
+            href: `/projects/${id}/activities/${activityId}`,
+          });
+        } catch (error) {
+          console.error("Could not notify favorite users about the fanproject update:", error);
+        }
+      }
+
       redirect(`/dashboard/projects/${id}`);
     }
   }

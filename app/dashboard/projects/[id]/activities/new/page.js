@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { createFanProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
+import { requireAdmin } from "@/lib/users/authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,16 @@ export default async function NewActivityPage({ params }) {
 
 async function handleCreateActivity(formData) {
     "use server";
-    const titulo = formData.get("titulo");
-    const descripcion = formData.get("descripcion");
-    const elementos = formData.get("elementos"); 
-    const estado = formData.get("estado");
-    const instruccionesPorSector = formData.get("instruccionesPorSector");
+    await requireAdmin();
+    const titulo = String(formData.get("titulo") || "").trim();
+    const descripcion = String(formData.get("descripcion") || "").trim();
+    const elementos = String(formData.get("elementos") || "");
+    const estado = String(formData.get("estado") || "");
+    const instruccionesPorSector = String(formData.get("instruccionesPorSector") || "");
+
+    if (!titulo || !descripcion) {
+      throw new Error("Completá el título y la descripción del fanproject.");
+    }
 
     const res = await createFanProject(id, { titulo, descripcion, elementos, estado, instruccionesPorSector });
     if (res.success) {

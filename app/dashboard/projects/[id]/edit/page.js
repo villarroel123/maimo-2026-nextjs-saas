@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { getProjectWithDetails, updateProject } from "@/lib/projects/projects";
+import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
+import { requireAdmin } from "@/lib/users/authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +21,34 @@ export default async function EditProjectPage({ params }) {
 
   async function handleUpdate(formData) {
     "use server";
-    const titulo = formData.get("titulo");
-    const pais = formData.get("pais");
-    const fecha = formData.get("fecha");
-    const imagen = formData.get("imagen"); 
+    await requireAdmin();
+    const titulo = String(formData.get("titulo") || "").trim();
+    const pais = String(formData.get("pais") || "").trim();
+    const fecha = String(formData.get("fecha") || "").trim();
+    const ubicacion = String(formData.get("ubicacion") || "").trim();
+    const imagen = String(formData.get("imagen") || "").trim();
 
-    const res = await updateProject(id, { titulo, pais, fecha, imagen }); 
+    if (!titulo || !pais || !fecha) {
+      throw new Error("Completá el título, país y fecha del concierto.");
+    }
+
+    const res = await updateProject(id, { titulo, pais, fecha, ubicacion, imagen });
     if (res.success) {
+      if (res.changes.length > 0) {
+        const updatedFields = res.changes.join(" y ");
+
+        try {
+          await notifyFavoriteUsers({
+            projectId: id,
+            title: `Actualización de ${res.title}`,
+            message: `Se actualizó ${updatedFields} de este concierto que guardaste en favoritos.`,
+            href: `/projects/${id}`,
+          });
+        } catch (error) {
+          console.error("Could not notify favorite users about the project update:", error);
+        }
+      }
+
       redirect("/dashboard/projects");
     }
   }
@@ -57,7 +80,20 @@ export default async function EditProjectPage({ params }) {
 
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">
-            País / Ubicación
+            Ubicación / Punto de encuentro
+          </label>
+          <input
+            type="text"
+            name="ubicacion"
+            defaultValue={project.Ubicacion || ""}
+            placeholder="Ej: Entrada de Sívori Alta, River Plate"
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          />
+        </div>
+
+       <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">
+            País
           </label>
           <input 
             type="text" 

@@ -25,6 +25,9 @@ export default async function ProjectDetailPage({ params }) {
       <span className="text-xs font-semibold uppercase tracking-widest text-[#C0567A]">
         {project.Pais || "Global"} • {project["Dia del concierto"]}
       </span>
+      {project.Ubicacion ? (
+        <p className="mt-2 text-sm text-[#8A5468]">Punto de encuentro: {project.Ubicacion}</p>
+      ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-4xl font-bold text-[#5C1F3A]">{project.Titulo}</h1>
         <FavoriteButton target={{ type: "project", projectId: project.id }} />

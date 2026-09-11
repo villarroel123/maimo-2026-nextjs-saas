@@ -44,6 +44,7 @@ export default function Navbar({ actions, profile, user }) {
       ? [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/favorites", label: "Favoritos" },
+          { href: "/notifications", label: "Notificaciones" },
         ]
       : []),
     ...(isAdmin ? [{ href: "/dashboard/users", label: "Usuarios" }] : []),
