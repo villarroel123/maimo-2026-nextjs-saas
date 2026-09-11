@@ -42,7 +42,8 @@ export default function Navbar({ actions, profile, user }) {
     { href: "/", label: "Home" },
     ...(user
       ? [
-          { href: "/dashboard", label: "Dashboard" }
+          { href: "/dashboard", label: "Dashboard" },
+          { href: "/favorites", label: "Favoritos" },
         ]
       : []),
     ...(isAdmin ? [{ href: "/dashboard/users", label: "Usuarios" }] : []),

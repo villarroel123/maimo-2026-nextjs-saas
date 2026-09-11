@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProjectWithDetails } from "@/lib/projects/projects";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
+import FavoriteButton from "@/components/favorites/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,10 @@ export default async function ProjectDetailPage({ params }) {
       <span className="text-xs font-semibold uppercase tracking-widest text-[#C0567A]">
         {project.Pais || "Global"} • {project["Dia del concierto"]}
       </span>
-      <h1 className="text-4xl font-bold mt-2 text-[#5C1F3A]">{project.Titulo}</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold text-[#5C1F3A]">{project.Titulo}</h1>
+        <FavoriteButton target={{ type: "project", projectId: project.id }} />
+      </div>
 
       <h2 className="mt-10 text-xl font-semibold text-[#5C1F3A] border-b border-[#F2B8CF] pb-2">
         Actividades del evento
@@ -48,6 +52,10 @@ export default async function ProjectDetailPage({ params }) {
               >
                 {sub.titulo}
               </Link>
+
+              <div className="mt-3">
+                <FavoriteButton target={{ type: "fanproject", projectId: project.id, activityId: sub.id }} />
+              </div>
 
               <p className="text-sm text-[#8A5468] mt-2 leading-relaxed">{sub.descripcion}</p>
               

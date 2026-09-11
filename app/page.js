@@ -5,6 +5,7 @@ import Hero from "@/components/Hero";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getProjects } from "@/lib/projects/projects";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import FavoriteButton from "@/components/favorites/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -64,12 +65,15 @@ export default async function Home() {
                     {project.Titulo}
                   </h3>
                 </div>
-                <Link
-                  className="mt-6 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d] sm:w-auto"
-                  href={`/projects/${project.id}`}
-                >
-                  Ver fanprojects
-                </Link>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
+                    href={`/projects/${project.id}`}
+                  >
+                    Ver fanprojects
+                  </Link>
+                  <FavoriteButton target={{ type: "project", projectId: project.id }} />
+                </div>
               </article>
             ))}
           </div>

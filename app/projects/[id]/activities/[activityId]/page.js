@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getActivityDetails } from "@/lib/projects/projects";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { getSectorInstructions } from "@/lib/projects/sector-instructions";
+import FavoriteButton from "@/components/favorites/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function ActivityDetailPage({ params }) {
         {status.label}
       </span>
       {/* Usamos activity.titulo */}
-      <h1 className="text-3xl font-bold mt-2 text-[#5C1F3A]">{activity.titulo}</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold text-[#5C1F3A]">{activity.titulo}</h1>
+        <FavoriteButton target={{ type: "fanproject", projectId: id, activityId }} />
+      </div>
       
       {/* Usamos activity.descripcion */}
       <p className="text-base text-[#8A5468] mt-4 leading-relaxed bg-white p-5 rounded-xl border border-[#F2B8CF]">
