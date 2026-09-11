@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logout } from "@/app/dashboard/actions";
+import { momoTrustFont, chironGoRoundTC } from '@/lib/fonts'
+import Image from "next/image";
 
 function isActivePath(pathname, href) {
   if (href === "/") {
@@ -20,8 +22,8 @@ function NavLink({ href, label, onClick, pathname }) {
     <Link
       className={`block border px-3 py-2 text-sm font-medium transition ${
         active
-          ? "border-zinc-700 bg-zinc-900 text-zinc-100"
-          : "border-transparent text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900 hover:text-zinc-100"
+          ? " bg-[#823038] text-white"
+          : "border-transparent text-white hover:bg-[#823038] hover:text-white"
       }`}
       href={href}
       onClick={onClick}
@@ -40,8 +42,7 @@ export default function Navbar({ actions, profile, user }) {
     { href: "/", label: "Home" },
     ...(user
       ? [
-          { href: "/dashboard", label: "Dashboard" },
-          { href: "/dashboard/tickets", label: "Tickets" },
+          { href: "/dashboard", label: "Dashboard" }
         ]
       : []),
     ...(isAdmin ? [{ href: "/dashboard/users", label: "Usuarios" }] : []),
@@ -52,18 +53,27 @@ export default function Navbar({ actions, profile, user }) {
   }
 
   return (
-    <nav className="border-b border-zinc-800 bg-zinc-950">
+    <nav className="border-b border-[#823038] bg-[#FFE4F3]">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 items-center justify-between gap-3 py-3">
           <Link
-            className="min-w-0 overflow-wrap-anywhere text-sm font-semibold uppercase tracking-[0.14em] text-zinc-100"
+            className={`min-w-0 overflow-wrap-anywhere text-sm ${momoTrustFont.className} uppercase tracking-[0.14em] text-[#823038]`}
             href="/"
             onClick={closeMenu}
           >
-            SaaS Starter
+            Narabi
           </Link>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-between gap-4 md:flex">
+          <Image
+              src="/items/narabi_logo.png"
+              alt="Narabi"
+              width={32}
+              height={32}
+              className="shrink-0"
+              priority
+            />
+
+          <div className={`${chironGoRoundTC.className} hidden min-w-0 flex-1 items-center justify-between gap-4 md:flex`}>
             <div className="ml-4 flex min-w-0 flex-wrap items-center gap-1">
               {links.map((link) => (
                 <NavLink
@@ -84,7 +94,7 @@ export default function Navbar({ actions, profile, user }) {
                   </span>
                   <form action={logout}>
                     <button
-                      className="h-10 border border-zinc-700 bg-transparent px-4 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-900"
+                      className="h-10 border border-[#823038] bg-[#FDFDFF] rounded-full px-4 text-sm font-semibold text-[#823038] transition hover:border-zinc-500 hover:bg-zinc-900"
                       type="submit"
                     >
                       Cerrar sesion
@@ -93,10 +103,10 @@ export default function Navbar({ actions, profile, user }) {
                 </>
               ) : (
                 <Link
-                  className="inline-flex h-10 items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-zinc-950 transition hover:border-cyan-300 hover:bg-cyan-300"
+                  className="inline-flex h-10 items-center justify-center border border-[#823038] bg-[#FDFDFF] rounded-full px-4 text-sm font-semibold text-[#823038] transition hover:border-cyan-300 hover:bg-cyan-300"
                   href="/login"
                 >
-                  Login
+                  Iniciar Sesión
                 </Link>
               )}
             </div>
@@ -149,7 +159,7 @@ export default function Navbar({ actions, profile, user }) {
           {user ? (
             <form action={logout} className="mt-3">
               <button
-                className="h-10 w-full border border-zinc-700 bg-transparent px-4 text-sm font-semibold text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-900"
+                className="h-10 w-full border border-zinc-700 bg-transparent px-4 text-sm font-semibold text-#823038 transition hover:border-zinc-500 hover:bg-zinc-900"
                 type="submit"
               >
                 Cerrar sesion
@@ -157,11 +167,11 @@ export default function Navbar({ actions, profile, user }) {
             </form>
           ) : (
             <Link
-              className="mt-3 inline-flex h-10 w-full items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-zinc-950 transition hover:border-cyan-300 hover:bg-cyan-300"
+              className="mt-3 inline-flex h-10 w-full items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-#823038 transition hover:border-cyan-300 hover:bg-cyan-300"
               href="/login"
               onClick={closeMenu}
             >
-              Login
+              Iniciar Sesión
             </Link>
           )}
         </div>
