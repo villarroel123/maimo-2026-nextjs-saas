@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { logout } from "@/app/dashboard/actions";
-import { momoTrustFont, chironGoRoundTC } from '@/lib/fonts'
-import Image from "next/image";
+import { chironGoRoundTC, momoTrustFont } from "@/lib/fonts";
 
 function isActivePath(pathname, href) {
   if (href === "/") {
@@ -15,70 +15,107 @@ function isActivePath(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ href, label, onClick, pathname }) {
+function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
   const active = isActivePath(pathname, href);
 
   return (
     <Link
-      className={`block border px-3 py-2 text-sm font-medium transition ${
+      className={`relative inline-flex min-h-10 items-center rounded-full px-3.5 py-2 text-sm font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
         active
-          ? " bg-[#823038] text-white"
-          : "border-transparent text-white hover:bg-[#823038] hover:text-white"
+          ? "bg-[#823038] text-white shadow-sm"
+          : "text-[#5C1F3A] hover:bg-[#F7CDE0] hover:text-[#823038]"
       }`}
       href={href}
       onClick={onClick}
     >
-      {label}
+      <span className="relative inline-flex">
+        {label}
+        {hasIndicator ? (
+          <span
+            aria-label="Hay notificaciones sin leer"
+            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#C0567A] ring-2 ring-white"
+          />
+        ) : null}
+      </span>
     </Link>
   );
 }
 
-export default function Navbar({ actions, profile, user }) {
+export default function Navbar({ actions, hasUnreadNotifications = false, profile, user }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const userType = profile?.user_type || "user";
   const isAdmin = userType === "admin";
   const links = [
     { href: "/", label: "Home" },
+    { href: "/votaciones", label: "Votaciones" },
     ...(user
       ? [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/favorites", label: "Favoritos" },
-          { href: "/notifications", label: "Notificaciones" },
+          { href: "/notifications", label: "Notificaciones", hasIndicator: hasUnreadNotifications },
         ]
       : []),
     ...(isAdmin ? [{ href: "/dashboard/users", label: "Usuarios" }] : []),
   ];
+
+  useEffect(() => {
+    const updateScrollState = () => setIsScrolled(window.scrollY > 12);
+
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   function closeMenu() {
     setIsOpen(false);
   }
 
   return (
-    <nav className="border-b border-[#823038] bg-[#FFE4F3]">
+    <nav
+      className={`sticky top-0 z-50 border-b transition-[background-color,box-shadow,border-color] duration-300 ${
+        isScrolled
+          ? "border-[#F2B8CF] bg-white/95 shadow-[0_10px_30px_rgba(92,31,58,0.14)] backdrop-blur"
+          : "border-[#F2B8CF] bg-[#FFE4F3]/95 backdrop-blur"
+      }`}
+    >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-16 items-center justify-between gap-3 py-3">
+        <div
+          className={`flex items-center justify-between gap-3 transition-[min-height,padding] duration-300 ${
+            isScrolled ? "min-h-14 py-2" : "min-h-16 py-3"
+          }`}
+        >
           <Link
-            className={`min-w-0 overflow-wrap-anywhere text-sm ${momoTrustFont.className} uppercase tracking-[0.14em] text-[#823038]`}
+            className="group flex min-w-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038]"
             href="/"
             onClick={closeMenu}
           >
-            Narabi
+            <Image
+              alt="Narabi"
+              className={`h-auto shrink-0 transition-[width] duration-300 ${isScrolled ? "w-8" : "w-9"}`}
+              height={36}
+              priority
+              src="/items/narabi_logo.png"
+              width={36}
+            />
+            <span
+              className={`min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] text-[#823038] transition-colors group-hover:text-[#C0567A] ${momoTrustFont.className}`}
+            >
+              Narabi
+            </span>
           </Link>
 
-          <Image
-              src="/items/narabi_logo.png"
-              alt="Narabi"
-              width={32}
-              height={32}
-              className="shrink-0"
-              priority
-            />
-
-          <div className={`${chironGoRoundTC.className} hidden min-w-0 flex-1 items-center justify-between gap-4 md:flex`}>
-            <div className="ml-4 flex min-w-0 flex-wrap items-center gap-1">
+          <div className={`${chironGoRoundTC.className} hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex`}>
+            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#F2B8CF] bg-white/70 p-1 shadow-sm">
               {links.map((link) => (
                 <NavLink
+                  hasIndicator={link.hasIndicator}
                   href={link.href}
                   key={link.href}
                   label={link.label}
@@ -87,28 +124,28 @@ export default function Navbar({ actions, profile, user }) {
               ))}
             </div>
 
-            <div className="flex min-w-0 items-center justify-end gap-3">
+            <div className="flex min-w-0 items-center justify-end gap-2">
               {actions}
               {user ? (
                 <>
-                  <span className="min-w-0 max-w-64 overflow-wrap-anywhere text-right text-sm text-zinc-500">
+                  <span className="hidden min-w-0 max-w-40 truncate text-right text-xs text-[#7A5364] xl:block">
                     {user.email || "Sin email"} ({userType})
                   </span>
                   <form action={logout}>
                     <button
-                      className="h-10 border border-[#823038] bg-[#FDFDFF] rounded-full px-4 text-sm font-semibold text-[#823038] transition hover:border-zinc-500 hover:bg-zinc-900"
+                      className="inline-flex h-10 items-center justify-center rounded-full border border-[#823038] bg-white px-4 text-sm font-semibold text-[#823038] transition hover:bg-[#823038] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
                       type="submit"
                     >
-                      Cerrar sesion
+                      Cerrar sesión
                     </button>
                   </form>
                 </>
               ) : (
                 <Link
-                  className="inline-flex h-10 items-center justify-center border border-[#823038] bg-[#FDFDFF] rounded-full px-4 text-sm font-semibold text-[#823038] transition hover:border-cyan-300 hover:bg-cyan-300"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#823038] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
                   href="/login"
                 >
-                  Iniciar Sesión
+                  Iniciar sesión
                 </Link>
               )}
             </div>
@@ -117,29 +154,30 @@ export default function Navbar({ actions, profile, user }) {
           <button
             aria-controls="mobile-menu"
             aria-expanded={isOpen}
-            className="grid size-10 place-items-center border border-zinc-700 bg-transparent text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-900 md:hidden"
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            className="grid size-10 place-items-center rounded-full border border-[#C9819C] bg-white/75 text-[#823038] transition hover:border-[#823038] hover:bg-[#F7CDE0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] lg:hidden"
             onClick={() => setIsOpen((value) => !value)}
             type="button"
           >
-            <span className="sr-only">Abrir menu</span>
-            <span className="grid gap-1.5">
-              <span className="block h-px w-5 bg-zinc-100" />
-              <span className="block h-px w-5 bg-zinc-100" />
-              <span className="block h-px w-5 bg-zinc-100" />
+            <span className="grid gap-1.5" aria-hidden="true">
+              <span className="block h-0.5 w-5 bg-current" />
+              <span className="block h-0.5 w-5 bg-current" />
+              <span className="block h-0.5 w-5 bg-current" />
             </span>
           </button>
         </div>
 
         <div
-          className={`grid gap-3 overflow-hidden transition-[grid-template-rows,padding] duration-200 md:hidden ${
+          className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 lg:hidden ${
             isOpen ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr] pb-0"
           }`}
           id="mobile-menu"
         >
-          <div className="min-h-0 overflow-hidden">
-            <div className="grid gap-1 border-t border-zinc-800 pt-3">
+          <div className={`${chironGoRoundTC.className} min-h-0 overflow-hidden`}>
+            <div className="grid gap-1 border-t border-[#F2B8CF] pt-3">
               {links.map((link) => (
                 <NavLink
+                  hasIndicator={link.hasIndicator}
                   href={link.href}
                   key={link.href}
                   label={link.label}
@@ -149,34 +187,34 @@ export default function Navbar({ actions, profile, user }) {
               ))}
             </div>
 
-            <div className="mt-3 grid min-w-0 gap-3 border-t border-zinc-800 pt-3">
+            <div className="mt-3 grid min-w-0 gap-3 border-t border-[#F2B8CF] pt-3">
               {actions}
               {user ? (
-                <span className="overflow-wrap-anywhere text-sm text-zinc-500">
+                <span className="overflow-wrap-anywhere text-sm text-[#7A5364]">
                   {user.email || "Sin email"} ({userType})
                 </span>
               ) : null}
             </div>
 
-          {user ? (
-            <form action={logout} className="mt-3">
-              <button
-                className="h-10 w-full border border-zinc-700 bg-transparent px-4 text-sm font-semibold text-#823038 transition hover:border-zinc-500 hover:bg-zinc-900"
-                type="submit"
+            {user ? (
+              <form action={logout} className="mt-3">
+                <button
+                  className="h-10 w-full rounded-full border border-[#823038] bg-white px-4 text-sm font-semibold text-[#823038] transition hover:bg-[#823038] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                  type="submit"
+                >
+                  Cerrar sesión
+                </button>
+              </form>
+            ) : (
+              <Link
+                className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#823038] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                href="/login"
+                onClick={closeMenu}
               >
-                Cerrar sesion
-              </button>
-            </form>
-          ) : (
-            <Link
-              className="mt-3 inline-flex h-10 w-full items-center justify-center border border-cyan-400 bg-cyan-400 px-4 text-sm font-semibold text-#823038 transition hover:border-cyan-300 hover:bg-cyan-300"
-              href="/login"
-              onClick={closeMenu}
-            >
-              Iniciar Sesión
-            </Link>
-          )}
-        </div>
+                Iniciar sesión
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>

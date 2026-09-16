@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import DeleteActivityButton from "@/components/DeleteActivityButton";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
+import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,8 @@ export default async function AdminProjectDetailPage({ params }) {
 
   const project = await getProjectWithDetails(id);
   if (!project) redirect("/dashboard");
+
+  const votingConcert = (await getFanProjectVotingConcerts()).find((concert) => concert.id === id);
 
   async function handleDeleteActivity(formData) {
     "use server";
@@ -60,6 +63,32 @@ export default async function AdminProjectDetailPage({ params }) {
       <div className="mb-4">
         <h2 className="text-xl font-bold text-[#5C1F3A]">Gestión de Actividades</h2>
       </div>
+
+      {votingConcert ? (
+        <section className="mb-8 border border-[#F2B8CF] bg-white p-5 rounded-xl">
+          <h2 className="text-xl font-bold text-[#5C1F3A]">Resultados de la votación</h2>
+          <p className="mt-1 text-sm text-[#8A5468]">
+            {votingConcert.totalVotes} voto{votingConcert.totalVotes === 1 ? "" : "s"} registrado{votingConcert.totalVotes === 1 ? "" : "s"}. Al confirmar un fanproject, esta votación dejará de estar activa.
+          </p>
+          <div className="mt-4 space-y-3">
+            {votingConcert.candidates.map((candidate) => {
+              const percentage = votingConcert.totalVotes ? Math.round((candidate.votes / votingConcert.totalVotes) * 100) : 0;
+
+              return (
+                <div className="rounded-lg border border-[#F2B8CF] bg-[#FFE4F3] p-4" key={candidate.id}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <span className="font-semibold text-[#5C1F3A]">{candidate.titulo}</span>
+                    <span className="text-[#8A5468]">{candidate.votes} voto{candidate.votes === 1 ? "" : "s"} · {percentage}%</span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+                    <div className="h-full rounded-full bg-[#C0567A]" style={{ width: `${percentage}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <div className="space-y-3">
         {!project.subitems || project.subitems.length === 0 ? (

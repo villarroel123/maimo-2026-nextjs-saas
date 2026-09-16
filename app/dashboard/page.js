@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getProjects } from "@/lib/projects/projects";
 import { getCurrentUserProfile, listUserProfiles } from "@/lib/users/users";
+import { hasUnreadNotificationsForUser } from "@/lib/notifications/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -15,14 +16,17 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const projects = await getProjects();
-  const profile = await getCurrentUserProfile(user);
+  const [projects, profile, hasUnreadNotifications] = await Promise.all([
+    getProjects(),
+    getCurrentUserProfile(user),
+    hasUnreadNotificationsForUser(user.uid),
+  ]);
   const isAdmin = profile?.user_type === "admin";
   const users = isAdmin ? await listUserProfiles() : [];
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
-      <Navbar user={user} profile={profile} />
+      <Navbar hasUnreadNotifications={hasUnreadNotifications} user={user} profile={profile} />
       <header className="mx-auto flex w-full max-w-6xl flex-col gap-5 border-b border-[#F2B8CF] px-4 py-7 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">

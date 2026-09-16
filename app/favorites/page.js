@@ -6,6 +6,7 @@ import FavoritesList from "@/components/favorites/FavoritesList";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { updateEmailNotificationPreference } from "@/lib/notifications/notifications";
+import { hasUnreadNotificationsForUser } from "@/lib/notifications/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,10 @@ export default async function FavoritesPage() {
     redirect("/login");
   }
 
-  const profile = await getCurrentUserProfile(user);
+  const [profile, hasUnreadNotifications] = await Promise.all([
+    getCurrentUserProfile(user),
+    hasUnreadNotificationsForUser(user.uid),
+  ]);
 
   async function saveEmailPreference(formData) {
     "use server";
@@ -35,7 +39,7 @@ export default async function FavoritesPage() {
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
-      <Navbar user={user} profile={profile} />
+      <Navbar hasUnreadNotifications={hasUnreadNotifications} user={user} profile={profile} />
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Tu lista</p>
         <h1 className="mt-3 text-3xl font-semibold text-[#5C1F3A] sm:text-5xl">Favoritos</h1>
