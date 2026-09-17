@@ -5,6 +5,7 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { getProjectWithDetails, updateProject } from "@/lib/projects/projects";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
 import { requireAdmin } from "@/lib/users/authorization";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +57,9 @@ export default async function EditProjectPage({ params }) {
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-xl mx-auto">
       <div className="mb-6">
-        <Link href="/dashboard/projects" className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver al listado
+        <Link href="/dashboard/projects" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver al listado
         </Link>
       </div>
 

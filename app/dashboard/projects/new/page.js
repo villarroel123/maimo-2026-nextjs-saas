@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { createProject } from "@/lib/projects/projects";
 import { requireAdmin } from "@/lib/users/authorization";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +37,9 @@ export default async function NewProjectPage() {
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-xl mx-auto">
       <div className="mb-6">
-        <Link href="/dashboard" className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver al Dashboard
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver al Dashboard
         </Link>
       </div>
 

@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import UserForm from "@/components/users/UserForm";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile, getUserProfile } from "@/lib/users/users";
 import { updateUser } from "../../actions";
-import { hasUnreadNotificationsForUser } from "@/lib/notifications/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +21,7 @@ export default async function EditUserPage({ params }) {
   }
 
   const { uid } = await params;
-  const [managedUser, hasUnreadNotifications] = await Promise.all([
-    getUserProfile(uid),
-    hasUnreadNotificationsForUser(currentUser.uid),
-  ]);
+  const managedUser = await getUserProfile(uid);
 
   if (!managedUser) {
     notFound();
@@ -35,7 +29,6 @@ export default async function EditUserPage({ params }) {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <Navbar hasUnreadNotifications={hasUnreadNotifications} user={currentUser} profile={currentProfile} />
       <section className="mx-auto w-full max-w-2xl px-4 py-7 sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-300">
           Administracion
@@ -62,7 +55,6 @@ export default async function EditUserPage({ params }) {
           Volver a usuarios
         </Link>
       </section>
-      <Footer />
     </main>
   );
 }

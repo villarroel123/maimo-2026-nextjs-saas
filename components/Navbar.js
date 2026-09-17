@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logout } from "@/app/dashboard/actions";
-import { chironGoRoundTC, momoTrustFont } from "@/lib/fonts";
 
 function isActivePath(pathname, href) {
   if (href === "/") {
@@ -22,8 +21,8 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
     <Link
       className={`relative inline-flex min-h-10 items-center rounded-full px-3.5 py-2 text-sm font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
         active
-          ? "bg-[#823038] text-white shadow-sm"
-          : "text-[#5C1F3A] hover:bg-[#F7CDE0] hover:text-[#823038]"
+          ? "bg-[#EEEEEE] text-[#823038] shadow-sm"
+          : "text-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038]"
       }`}
       href={href}
       onClick={onClick}
@@ -33,7 +32,7 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
         {hasIndicator ? (
           <span
             aria-label="Hay notificaciones sin leer"
-            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#C0567A] ring-2 ring-white"
+            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#EEEEEE] ring-2 ring-[#0D1821]"
           />
         ) : null}
       </span>
@@ -81,8 +80,8 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
     <nav
       className={`sticky top-0 z-50 border-b transition-[background-color,box-shadow,border-color] duration-300 ${
         isScrolled
-          ? "border-[#F2B8CF] bg-white/95 shadow-[0_10px_30px_rgba(92,31,58,0.14)] backdrop-blur"
-          : "border-[#F2B8CF] bg-[#FFE4F3]/95 backdrop-blur"
+          ? "border-[#823038] bg-[#823038]/95 shadow-[0_10px_30px_rgba(13,24,33,0.24)] backdrop-blur"
+          : "border-[#0D1821] bg-[#0D1821]/95 backdrop-blur"
       }`}
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -105,14 +104,14 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               width={36}
             />
             <span
-              className={`min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] text-[#823038] transition-colors group-hover:text-[#C0567A] ${momoTrustFont.className}`}
+              className="min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] text-[#EEEEEE] transition-colors group-hover:text-white"
             >
               Narabi
             </span>
           </Link>
 
-          <div className={`${chironGoRoundTC.className} hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex`}>
-            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#F2B8CF] bg-white/70 p-1 shadow-sm">
+          <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex">
+            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#EEEEEE]/25 bg-[#EEEEEE]/10 p-1 shadow-sm">
               {links.map((link) => (
                 <NavLink
                   hasIndicator={link.hasIndicator}
@@ -128,12 +127,12 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               {actions}
               {user ? (
                 <>
-                  <span className="hidden min-w-0 max-w-40 truncate text-right text-xs text-[#7A5364] xl:block">
+                  <span className="hidden min-w-0 max-w-40 truncate text-right text-xs text-[#EEEEEE]/75 xl:block">
                     {user.email || "Sin email"} ({userType})
                   </span>
                   <form action={logout}>
                     <button
-                      className="inline-flex h-10 items-center justify-center rounded-full border border-[#823038] bg-white px-4 text-sm font-semibold text-[#823038] transition hover:bg-[#823038] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                      className="inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold text-[#EEEEEE] transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
                       type="submit"
                     >
                       Cerrar sesión
@@ -142,7 +141,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 </>
               ) : (
                 <Link
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#823038] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#EEEEEE] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#EEEEEE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
                   href="/login"
                 >
                   Iniciar sesión
@@ -155,7 +154,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
             aria-controls="mobile-menu"
             aria-expanded={isOpen}
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-            className="grid size-10 place-items-center rounded-full border border-[#C9819C] bg-white/75 text-[#823038] transition hover:border-[#823038] hover:bg-[#F7CDE0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] lg:hidden"
+            className="grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] lg:hidden"
             onClick={() => setIsOpen((value) => !value)}
             type="button"
           >
@@ -173,8 +172,8 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
           }`}
           id="mobile-menu"
         >
-          <div className={`${chironGoRoundTC.className} min-h-0 overflow-hidden`}>
-            <div className="grid gap-1 border-t border-[#F2B8CF] pt-3">
+          <div className="min-h-0 overflow-hidden">
+            <div className="grid gap-1 border-t border-[#EEEEEE]/25 pt-3">
               {links.map((link) => (
                 <NavLink
                   hasIndicator={link.hasIndicator}
@@ -187,10 +186,10 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               ))}
             </div>
 
-            <div className="mt-3 grid min-w-0 gap-3 border-t border-[#F2B8CF] pt-3">
+            <div className="mt-3 grid min-w-0 gap-3 border-t border-[#EEEEEE]/25 pt-3">
               {actions}
               {user ? (
-                <span className="overflow-wrap-anywhere text-sm text-[#7A5364]">
+                <span className="overflow-wrap-anywhere text-sm text-[#EEEEEE]/75">
                   {user.email || "Sin email"} ({userType})
                 </span>
               ) : null}
@@ -199,7 +198,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
             {user ? (
               <form action={logout} className="mt-3">
                 <button
-                  className="h-10 w-full rounded-full border border-[#823038] bg-white px-4 text-sm font-semibold text-[#823038] transition hover:bg-[#823038] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                  className="h-10 w-full rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold text-[#EEEEEE] transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
                   type="submit"
                 >
                   Cerrar sesión
@@ -207,7 +206,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               </form>
             ) : (
               <Link
-                className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#823038] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#EEEEEE] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#EEEEEE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
                 href="/login"
                 onClick={closeMenu}
               >

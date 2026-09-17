@@ -14,7 +14,7 @@ export default function Hero() {
 
       {/* Contenido centrado */}
       <div className="relative z-10 mx-auto max-w-4xl space-y-6 flex justify-center items-center flex-col">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#823038] border border-[#823038] bg-[#FDFDFF] rounded-full w-[18em]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#823038] border border-[#823038] bg-[#FDFDFF]/100 rounded-full w-[18em]">
           Comunidad de Fans
         </p>
         

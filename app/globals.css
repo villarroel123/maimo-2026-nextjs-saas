@@ -1,24 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-sans: var(--font-raleway), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
 }
 
 @layer base {
+  :root {
+    --narabi-surface: #EEEEEE;
+    --narabi-primary: #823038;
+    --narabi-ink: #0D1821;
+    --narabi-line: rgb(130 48 56 / 0.28);
+  }
+
   html {
     height: 100%;
-    color-scheme: dark;
+    background: var(--narabi-surface);
+    color-scheme: light;
   }
 
   body {
     min-height: 100%;
     overflow-x: hidden;
-    background: #05070a;
-    color: #e6edf3;
-    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    background: var(--narabi-surface);
+    color: var(--narabi-ink);
+    font-family: var(--font-raleway), Arial, Helvetica, sans-serif;
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-paytone-one), sans-serif;
+    font-weight: 400 !important;
+    font-style: normal;
+  }
+
+  h2 {
+    font-size: clamp(1.65rem, 1.3rem + 0.8vw, 2rem) !important;
+    line-height: 1.15 !important;
   }
 
   button {
@@ -41,5 +66,61 @@
 @layer utilities {
   .overflow-wrap-anywhere {
     overflow-wrap: anywhere;
+  }
+
+  .narabi-surface {
+    background-color: var(--narabi-surface);
+  }
+
+  .narabi-primary {
+    background-color: var(--narabi-primary);
+  }
+
+  .narabi-ink {
+    background-color: var(--narabi-ink);
+  }
+
+  [class~="bg-[#FDFDFF]"],
+  [class~="bg-[#FFE4F3]"],
+  [class~="bg-[#FFF7FB]"],
+  [class~="bg-[#F8C9DE]"],
+  [class~="bg-[#F7CDE0]"],
+  [class~="bg-[#FCE7F0]"],
+  [class~="bg-[#f9d4e6]"] {
+    background-color: var(--narabi-surface) !important;
+  }
+
+  [class~="bg-[#5C1F3A]"],
+  [class~="bg-[#7A2A4D]"],
+  [class~="bg-[#7a2a4d]"],
+  [class~="bg-[#A63D65]"] {
+    background-color: var(--narabi-primary) !important;
+  }
+
+  [class~="text-[#5C1F3A]"],
+  [class~="text-[#8A5468]"],
+  [class~="text-[#7A5364]"],
+  [class~="text-[#7F4A5E]"],
+  [class~="text-[#754B5B]"],
+  [class~="text-[#9B697A]"],
+  [class~="text-[#B68A9A]"] {
+    color: var(--narabi-ink) !important;
+  }
+
+  [class~="text-[#C0567A]"],
+  [class~="text-[#B53E66]"],
+  [class~="text-[#7A2A4D]"],
+  [class~="text-[#A63D65]"] {
+    color: var(--narabi-primary) !important;
+  }
+
+  [class~="border-[#F2B8CF]"],
+  [class~="border-[#EAB0C8]"],
+  [class~="border-[#C9819C]"],
+  [class~="border-[#D985A5]"],
+  [class~="border-[#F5D5E2]"],
+  [class~="border-[#E8AEC4]"],
+  [class~="border-[#F6BDD5]"] {
+    border-color: var(--narabi-line) !important;
   }
 }

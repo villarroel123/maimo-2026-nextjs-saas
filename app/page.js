@@ -1,31 +1,19 @@
 import Link from "next/link";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import { getCurrentUser } from "@/lib/firebase/session";
 import { getProjects } from "@/lib/projects/projects";
-import { getCurrentUserProfile } from "@/lib/users/users";
-import FavoriteButton from "@/components/favorites/FavoriteButton";
-import { hasUnreadNotificationsForUser } from "@/lib/notifications/notifications";
-import { getConfirmedFanProjectConcerts, getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
+import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 import HorizontalSlider from "@/components/HorizontalSlider";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const user = await getCurrentUser();
-  const [profile, projects, hasUnreadNotifications, confirmedConcerts, votingConcerts] = await Promise.all([
-    user ? getCurrentUserProfile(user) : null,
+  const [projects, votingConcerts] = await Promise.all([
     getProjects(),
-    user ? hasUnreadNotificationsForUser(user.uid) : false,
-    getConfirmedFanProjectConcerts(),
     getFanProjectVotingConcerts(),
   ]);
 
   return (
-    <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
-      <Navbar hasUnreadNotifications={hasUnreadNotifications} user={user} profile={profile} />
-
+    <main className="min-h-screen bg-[#EEEEEE] text-[#0D1821]">
       <Hero />
 
       <section className="mx-auto mt-10 w-full max-w-6xl px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8 bg-[#FFE4F3]">
@@ -50,7 +38,7 @@ export default async function Home() {
               <article className="flex w-[86%] shrink-0 snap-start flex-col justify-between border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]" key={project.id}>
                 <div>
                   {/* Contenedor de la imagen */}
-                  <div className="relative w-full h-48 mb-4 overflow-hidden rounded-xl bg-[#FFE4F3]">
+                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-[#EEEEEE]">
                     <img
                       src={project.imagen || "/projects/placeholder.jpg"}
                       alt={project.Titulo}
@@ -80,55 +68,6 @@ export default async function Home() {
                   >
                     Ver fanprojects
                   </Link>
-                  <FavoriteButton target={{ type: "project", projectId: project.id }} />
-                </div>
-              </article>
-            ))}
-          </HorizontalSlider>
-        )}
-      </section>
-
-      <section className="mx-auto mt-10 w-full max-w-6xl bg-[#FFE4F3] px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
-            Próximos conciertos
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-normal text-[#5C1F3A]">
-            Fanprojects confirmados
-          </h2>
-        </div>
-
-        {confirmedConcerts.length === 0 ? (
-          <div className="border border-[#F2B8CF] bg-white/60 p-6 text-sm leading-6 text-[#8A5468]">
-            Todavía no hay fanprojects confirmados para los próximos conciertos.
-          </div>
-        ) : (
-          <HorizontalSlider label="fanprojects confirmados">
-            {confirmedConcerts.map((concert) => (
-              <article className="w-[86%] shrink-0 snap-start rounded-2xl border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]" key={concert.id}>
-                <div className="flex items-center justify-between gap-3 border-b border-[#FCE7F0] pb-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-[#5C1F3A]">{concert.Titulo}</p>
-                    <p className="mt-1 text-xs text-[#8A5468]">{concert["Dia del concierto"] || "Fecha a confirmar"}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-[#E9F8EE] px-2.5 py-1 text-xs font-semibold text-[#287142]">
-                    Confirmados
-                  </span>
-                </div>
-
-                <div className="divide-y divide-[#FCE7F0]">
-                  {concert.fanprojects.map((fanproject) => (
-                    <Link
-                      className="group flex items-center justify-between gap-3 py-3 transition hover:text-[#C0567A]"
-                      href={`/projects/${concert.id}/activities/${fanproject.id}`}
-                      key={fanproject.id}
-                    >
-                      <span className="min-w-0 truncate text-sm font-medium text-[#5C1F3A] group-hover:text-[#C0567A]">
-                        {fanproject.titulo}
-                      </span>
-                      <span aria-hidden="true" className="text-[#C0567A]">→</span>
-                    </Link>
-                  ))}
                 </div>
               </article>
             ))}
@@ -176,8 +115,6 @@ export default async function Home() {
           </HorizontalSlider>
         )}
       </section>
-      
-      <Footer />
     </main>
   );
 }

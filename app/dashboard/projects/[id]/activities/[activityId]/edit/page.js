@@ -7,6 +7,7 @@ import { FANPROJECT_STATUSES, getFanProjectStatus } from "@/lib/projects/fanproj
 import { sectorInstructionsToText } from "@/lib/projects/sector-instructions";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
 import { requireAdmin } from "@/lib/users/authorization";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +60,9 @@ export default async function EditActivityPage({ params }) {
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-xl mx-auto">
       <div className="mb-6">
-        <Link href={`/dashboard/projects/${id}`} className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver al proyecto
+        <Link href={`/dashboard/projects/${id}`} className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver al proyecto
         </Link>
       </div>
 

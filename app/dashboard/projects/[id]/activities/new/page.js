@@ -5,6 +5,7 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { createFanProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
 import { requireAdmin } from "@/lib/users/authorization";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,9 @@ async function handleCreateActivity(formData) {
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-xl mx-auto">
       <div className="mb-6">
-        <Link href={`/dashboard/projects/${id}`} className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver a actividades
+        <Link href={`/dashboard/projects/${id}`} className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver a actividades
         </Link>
       </div>
 

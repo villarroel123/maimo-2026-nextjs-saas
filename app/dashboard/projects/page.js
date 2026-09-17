@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getProjects, deleteProject } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 import DeleteButton from "@/components/DeleteButton";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +25,9 @@ export default async function ProjectsPage() {
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-4xl mx-auto">
       <div className="mb-6 flex justify-between items-center">
-        <Link href="/dashboard" className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver al Dashboard
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver al Dashboard
         </Link>
         {isAdmin && (
           <Link
@@ -53,9 +55,10 @@ export default async function ProjectsPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Link 
                   href={`/dashboard/projects/${project.id}`}
-                  className="text-xs bg-white hover:bg-[#f9d4e6] text-[#5C1F3A] px-3 py-2 rounded-lg transition font-medium"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-medium text-[#5C1F3A] transition hover:bg-[#f9d4e6]"
                 >
-                  Ver actividades &rarr;
+                  Ver actividades
+                  <CircleArrowIcon direction="right" className="size-3.5" />
                 </Link>
 
                 {isAdmin && (

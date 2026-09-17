@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getProjectWithDetails, deleteFanProject } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import DeleteActivityButton from "@/components/DeleteActivityButton";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
-import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
+import { closeFanProjectVoting, getFanProjectVoteSummary } from "@/lib/votes/fanproject-votes";
+import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
+import { requireAdmin } from "@/lib/users/authorization";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +24,7 @@ export default async function AdminProjectDetailPage({ params }) {
   const project = await getProjectWithDetails(id);
   if (!project) redirect("/dashboard");
 
-  const votingConcert = (await getFanProjectVotingConcerts()).find((concert) => concert.id === id);
+  const votingSummary = await getFanProjectVoteSummary(project);
 
   async function handleDeleteActivity(formData) {
     "use server";
@@ -30,11 +34,42 @@ export default async function AdminProjectDetailPage({ params }) {
     redirect(`/dashboard/projects/${projId}`);
   }
 
+  async function handleCloseVote(formData) {
+    "use server";
+
+    await requireAdmin();
+    const projectId = String(formData.get("projectId") || "").trim();
+    const fanprojectId = String(formData.get("fanprojectId") || "").trim();
+
+    if (projectId !== id || !fanprojectId || fanprojectId.includes("/")) {
+      throw new Error("La votación no es válida.");
+    }
+
+    const result = await closeFanProjectVoting({ projectId, fanprojectId });
+
+    try {
+      await notifyFavoriteUsers({
+        projectId,
+        title: `Fanproject confirmado: ${result.title}`,
+        message: `La votación se cerró y ${result.title} fue confirmado para este concierto.`,
+        href: `/projects/${projectId}/activities/${fanprojectId}`,
+      });
+    } catch (error) {
+      console.error("Could not notify favorite users about the closed vote:", error);
+    }
+
+    revalidatePath("/");
+    revalidatePath("/votaciones");
+    revalidatePath(`/dashboard/projects/${projectId}`);
+    redirect(`/dashboard/projects/${projectId}?vote=closed`);
+  }
+
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038] p-8 max-w-4xl mx-auto">
       <div className="mb-6 flex justify-between items-center">
-        <Link href="/dashboard" className="text-sm text-[#C0567A] hover:underline">
-          &larr; Volver al Dashboard
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver al Dashboard
         </Link>
         <Link
           href={`/dashboard/projects/${project.id}/activities/new`}
@@ -64,15 +99,27 @@ export default async function AdminProjectDetailPage({ params }) {
         <h2 className="text-xl font-bold text-[#5C1F3A]">Gestión de Actividades</h2>
       </div>
 
-      {votingConcert ? (
+      {votingSummary?.isClosed ? (
+        <section className="mb-8 rounded-xl border border-[#B7DFC5] bg-[#E9F8EE] p-5">
+          <span className="inline-flex rounded-full border border-[#B7DFC5] bg-white px-2.5 py-1 text-xs font-semibold text-[#287142]">
+            Votación cerrada
+          </span>
+          <h2 className="mt-3 text-xl font-bold text-[#287142]">Fanproject confirmado</h2>
+          <p className="mt-1 text-sm text-[#3B6D4B]">
+            {votingSummary.winner
+              ? `${votingSummary.winner.titulo} fue confirmado con ${votingSummary.totalVotes} voto${votingSummary.totalVotes === 1 ? "" : "s"} registrados.`
+              : "La votación se cerró."}
+          </p>
+        </section>
+      ) : votingSummary ? (
         <section className="mb-8 border border-[#F2B8CF] bg-white p-5 rounded-xl">
           <h2 className="text-xl font-bold text-[#5C1F3A]">Resultados de la votación</h2>
           <p className="mt-1 text-sm text-[#8A5468]">
-            {votingConcert.totalVotes} voto{votingConcert.totalVotes === 1 ? "" : "s"} registrado{votingConcert.totalVotes === 1 ? "" : "s"}. Al confirmar un fanproject, esta votación dejará de estar activa.
+            {votingSummary.totalVotes} voto{votingSummary.totalVotes === 1 ? "" : "s"} registrado{votingSummary.totalVotes === 1 ? "" : "s"}. Elegí el ganador para confirmarlo y cerrar la votación.
           </p>
           <div className="mt-4 space-y-3">
-            {votingConcert.candidates.map((candidate) => {
-              const percentage = votingConcert.totalVotes ? Math.round((candidate.votes / votingConcert.totalVotes) * 100) : 0;
+            {votingSummary.candidates.map((candidate) => {
+              const percentage = votingSummary.totalVotes ? Math.round((candidate.votes / votingSummary.totalVotes) * 100) : 0;
 
               return (
                 <div className="rounded-lg border border-[#F2B8CF] bg-[#FFE4F3] p-4" key={candidate.id}>
@@ -83,6 +130,16 @@ export default async function AdminProjectDetailPage({ params }) {
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                     <div className="h-full rounded-full bg-[#C0567A]" style={{ width: `${percentage}%` }} />
                   </div>
+                  <form action={handleCloseVote} className="mt-4">
+                    <input name="projectId" type="hidden" value={project.id} />
+                    <input name="fanprojectId" type="hidden" value={candidate.id} />
+                    <button
+                      className="rounded-full bg-[#5C1F3A] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#7a2a4d]"
+                      type="submit"
+                    >
+                      Confirmar ganador y cerrar votación
+                    </button>
+                  </form>
                 </div>
               );
             })}

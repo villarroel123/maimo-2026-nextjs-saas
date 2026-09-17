@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import UserForm from "@/components/users/UserForm";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile, listUserProfiles } from "@/lib/users/users";
 import { createUser, deleteUser } from "./actions";
-import { hasUnreadNotificationsForUser } from "@/lib/notifications/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -34,14 +31,10 @@ export default async function UsersPage() {
     redirect("/dashboard");
   }
 
-  const [users, hasUnreadNotifications] = await Promise.all([
-    listUserProfiles(),
-    hasUnreadNotificationsForUser(user.uid),
-  ]);
+  const users = await listUserProfiles();
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <Navbar hasUnreadNotifications={hasUnreadNotifications} user={user} profile={profile} />
       <header className="mx-auto flex w-full max-w-6xl flex-col gap-5 border-b border-zinc-800 px-4 py-7 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-300">
@@ -133,7 +126,6 @@ export default async function UsersPage() {
           )}
         </div>
       </section>
-      <Footer />
     </main>
   );
 }

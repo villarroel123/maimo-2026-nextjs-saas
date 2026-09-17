@@ -1,11 +1,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getNotificationsForUser, markNotificationAsRead } from "@/lib/notifications/notifications";
-import { getCurrentUserProfile } from "@/lib/users/users";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +13,7 @@ export default async function NotificationsPage() {
     redirect("/login");
   }
 
-  const [profile, notifications] = await Promise.all([
-    getCurrentUserProfile(user),
-    getNotificationsForUser(user.uid),
-  ]);
+  const notifications = await getNotificationsForUser(user.uid);
 
   async function markAsRead(formData) {
     "use server";
@@ -36,7 +30,6 @@ export default async function NotificationsPage() {
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
-      <Navbar hasUnreadNotifications={notifications.some((notification) => !notification.read)} user={user} profile={profile} />
       <section className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Tu actividad</p>
         <h1 className="mt-3 text-3xl font-semibold text-[#5C1F3A] sm:text-5xl">Notificaciones</h1>
@@ -75,7 +68,6 @@ export default async function NotificationsPage() {
           ))}
         </div>
       </section>
-      <Footer />
     </main>
   );
 }
