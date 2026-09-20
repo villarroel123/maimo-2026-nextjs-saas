@@ -40,23 +40,57 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
   );
 }
 
+function ProfileLink({ avatarUrl, displayName, onClick, compact = false }) {
+  const initial = displayName.trim().charAt(0).toUpperCase() || "N";
+
+  return (
+    <Link
+      aria-label="Abrir Mi agenda"
+      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#EEEEEE]/40 bg-[#EEEEEE]/10 p-1.5 text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+        compact ? "pr-1.5" : "pr-3"
+      }`}
+      href="/profile"
+      onClick={onClick}
+      title="Mi agenda"
+    >
+      {avatarUrl ? (
+        <img
+          alt=""
+          className="size-7 shrink-0 rounded-full border border-[#EEEEEE]/60 object-cover"
+          referrerPolicy="no-referrer"
+          src={avatarUrl}
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EEEEEE] text-xs font-bold text-[#823038]"
+        >
+          {initial}
+        </span>
+      )}
+      {compact ? null : (
+        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">{displayName}</span>
+      )}
+    </Link>
+  );
+}
+
 export default function Navbar({ actions, hasUnreadNotifications = false, profile, user }) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+  const [openMenuForPath, setOpenMenuForPath] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const userType = profile?.user_type || "user";
-  const isAdmin = userType === "admin";
+  const isOpen = openMenuForPath === pathname;
+  const displayName = profile?.displayName || user?.name || user?.email?.split("@")[0] || "Mi agenda";
+  const avatarUrl = profile?.photoURL || user?.picture || "";
   const links = [
     { href: "/", label: "Home" },
     { href: "/votaciones", label: "Votaciones" },
     ...(user
       ? [
           { href: "/dashboard", label: "Dashboard" },
-          { href: "/favorites", label: "Favoritos" },
           { href: "/notifications", label: "Notificaciones", hasIndicator: hasUnreadNotifications },
         ]
       : []),
-    ...(isAdmin ? [{ href: "/dashboard/users", label: "Usuarios" }] : []),
   ];
 
   useEffect(() => {
@@ -68,12 +102,8 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
     return () => window.removeEventListener("scroll", updateScrollState);
   }, []);
 
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
   function closeMenu() {
-    setIsOpen(false);
+    setOpenMenuForPath(null);
   }
 
   return (
@@ -127,9 +157,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               {actions}
               {user ? (
                 <>
-                  <span className="hidden min-w-0 max-w-40 truncate text-right text-xs text-[#EEEEEE]/75 xl:block">
-                    {user.email || "Sin email"} ({userType})
-                  </span>
+                  <ProfileLink avatarUrl={avatarUrl} displayName={displayName} />
                   <form action={logout}>
                     <button
                       className="inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold text-[#EEEEEE] transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
@@ -150,20 +178,30 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
             </div>
           </div>
 
-          <button
-            aria-controls="mobile-menu"
-            aria-expanded={isOpen}
-            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-            className="grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] lg:hidden"
-            onClick={() => setIsOpen((value) => !value)}
-            type="button"
-          >
-            <span className="grid gap-1.5" aria-hidden="true">
-              <span className="block h-0.5 w-5 bg-current" />
-              <span className="block h-0.5 w-5 bg-current" />
-              <span className="block h-0.5 w-5 bg-current" />
-            </span>
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            {user ? (
+              <ProfileLink
+                avatarUrl={avatarUrl}
+                compact
+                displayName={displayName}
+                onClick={closeMenu}
+              />
+            ) : null}
+            <button
+              aria-controls="mobile-menu"
+              aria-expanded={isOpen}
+              aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+              className="grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
+              onClick={() => setOpenMenuForPath((value) => (value === pathname ? null : pathname))}
+              type="button"
+            >
+              <span className="grid gap-1.5" aria-hidden="true">
+                <span className="block h-0.5 w-5 bg-current" />
+                <span className="block h-0.5 w-5 bg-current" />
+                <span className="block h-0.5 w-5 bg-current" />
+              </span>
+            </button>
+          </div>
         </div>
 
         <div
@@ -189,9 +227,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
             <div className="mt-3 grid min-w-0 gap-3 border-t border-[#EEEEEE]/25 pt-3">
               {actions}
               {user ? (
-                <span className="overflow-wrap-anywhere text-sm text-[#EEEEEE]/75">
-                  {user.email || "Sin email"} ({userType})
-                </span>
+                <ProfileLink avatarUrl={avatarUrl} displayName={displayName} onClick={closeMenu} />
               ) : null}
             </div>
 

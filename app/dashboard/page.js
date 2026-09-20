@@ -33,27 +33,6 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <section className="mx-auto mt-7 grid w-[calc(100%-2rem)] max-w-6xl grid-cols-1 gap-px overflow-hidden border border-[#F2B8CF] bg-[#F2B8CF] sm:w-[calc(100%-3rem)] md:grid-cols-3 lg:w-[calc(100%-4rem)]">
-        <article className="min-w-0 bg-white p-5">
-          <span className="block text-sm text-[#8A5468]">Usuario</span>
-          <strong className="mt-3 block overflow-wrap-anywhere text-base font-semibold text-[#5C1F3A]">
-            {user.email || "Sin email"}
-          </strong>
-        </article>
-        <article className="min-w-0 bg-white p-5">
-          <span className="block text-sm text-[#8A5468]">UID</span>
-          <strong className="mt-3 block overflow-wrap-anywhere font-mono text-sm font-medium text-[#5C1F3A]">
-            {user.uid}
-          </strong>
-        </article>
-        <article className="min-w-0 bg-white p-5">
-          <span className="block text-sm text-[#8A5468]">Tipo</span>
-          <strong className="mt-3 block overflow-wrap-anywhere text-base font-semibold text-[#5C1F3A]">
-            {profile?.user_type || "user"}
-          </strong>
-        </article>
-      </section>
-
       <section className="mx-auto mt-7 grid w-[calc(100%-2rem)] max-w-6xl gap-px overflow-hidden border border-[#F2B8CF] bg-[#F2B8CF] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-4rem)] lg:grid-cols-2">
         <div className="bg-white p-5">
           <span className="block text-sm text-[#8A5468]">Conciertos registrados</span>
