@@ -13,57 +13,54 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="min-h-screen bg-[#EEEEEE] text-[#0D1821]">
+    <main className="min-h-screen">
       <Hero />
 
       
-<div
-  className="relative mt-0 h-[3em] w-full overflow-hidden"
-  style={{ backgroundColor: "#823038" }}
->
-  <div className="narabi-track flex h-full w-max">
-    {Array.from({ length: 28 }).map((_, i) => (
-      <div
-        key={i}
-        className="flex h-full w-55 shrink-0 items-center justify-center"
-      >
-        <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
-          narabi 
-        </span>
-        <span className="font-sans uppercase tracking-wide text-[#FFE4F3] ml-15">
-         ˚｡𖦹 ⋆｡°
-        </span>
+    <div
+      className="relative h-[3em] w-full overflow-hidden bg-[#823038]">
+      <div className="narabi-track flex h-full w-max">
+        {Array.from({ length: 28 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex h-full w-55 shrink-0 items-center justify-center">
+            <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
+              narabi 
+            </span>
+            <span className="font-sans uppercase tracking-wide text-[#FFE4F3] ml-15">
+            ˚｡𖦹 ⋆｡°
+            </span>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-</div>
+    </div>
 
-<style>{`
-  .narabi-track {
-    animation: narabi-scroll 30s linear infinite;
-  }
+    <style>{`
+      .narabi-track {
+        animation: narabi-scroll 30s linear infinite;
+      }
 
-  @keyframes narabi-scroll {
-    from {
-      transform: translateX(0);
-    }
+      @keyframes narabi-scroll {
+        from {
+          transform: translateX(0);
+        }
 
-    to {
-      transform: translateX(-50%);
-    }
-  }
-`}</style>
+        to {
+          transform: translateX(-50%);
+        }
+      }
+    `}</style>
 
 
 
-      <section className="mx-auto mt-10 w-full max-w-6xl px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8 bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] ">
+      <section className="w-full px-4 sm:px-6 sm:py-10 lg:px-8 bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] ">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
               Próximos conciertos
             </p>
-            <h2 className="mt-3 text-5xl font-semibold  text-[#5C1F3A]">
-              Conciertos disponibles
+            <h2 className="mt-3 text-5xl font-semibold  text-[#FDFDFF]">
+              Conciertos disponibles !
             </h2>
           </div>
         </div>
@@ -118,7 +115,7 @@ export default async function Home() {
         )}
       </section>
 
-      <section className="mx-auto mt-10 w-full max-w-6xl px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8 bg-[#FFE4F3]">
+      <section className="w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-8 bg-[#FDFDFF]">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">

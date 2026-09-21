@@ -42,7 +42,7 @@
   }
 
   h2 {
-    font-size: clamp(1.65rem, 1.3rem + 0.8vw, 2rem) !important;
+    font-size: clamp(1.65rem, 1.3rem + 0.8vw, 2rem);
     line-height: 1.15 !important;
   }
 
@@ -80,47 +80,4 @@
     background-color: var(--narabi-ink);
   }
 
-  [class~="bg-[#FDFDFF]"],
-  [class~="bg-[#FFE4F3]"],
-  [class~="bg-[#FFF7FB]"],
-  [class~="bg-[#F8C9DE]"],
-  [class~="bg-[#F7CDE0]"],
-  [class~="bg-[#FCE7F0]"],
-  [class~="bg-[#f9d4e6]"] {
-    background-color: var(--narabi-surface) !important;
-  }
-
-  [class~="bg-[#5C1F3A]"],
-  [class~="bg-[#7A2A4D]"],
-  [class~="bg-[#7a2a4d]"],
-  [class~="bg-[#A63D65]"] {
-    background-color: var(--narabi-primary) !important;
-  }
-
-  [class~="text-[#5C1F3A]"],
-  [class~="text-[#8A5468]"],
-  [class~="text-[#7A5364]"],
-  [class~="text-[#7F4A5E]"],
-  [class~="text-[#754B5B]"],
-  [class~="text-[#9B697A]"],
-  [class~="text-[#B68A9A]"] {
-    color: var(--narabi-ink) !important;
-  }
-
-  [class~="text-[#C0567A]"],
-  [class~="text-[#B53E66]"],
-  [class~="text-[#7A2A4D]"],
-  [class~="text-[#A63D65]"] {
-    color: var(--narabi-primary) !important;
-  }
-
-  [class~="border-[#F2B8CF]"],
-  [class~="border-[#EAB0C8]"],
-  [class~="border-[#C9819C]"],
-  [class~="border-[#D985A5]"],
-  [class~="border-[#F5D5E2]"],
-  [class~="border-[#E8AEC4]"],
-  [class~="border-[#F6BDD5]"] {
-    border-color: var(--narabi-line) !important;
-  }
 }
