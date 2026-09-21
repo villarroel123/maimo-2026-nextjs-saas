@@ -1,7 +1,11 @@
 import Link from "next/link";
+
 import Hero from "@/components/Hero";
+
 import { getProjects } from "@/lib/projects/projects";
+
 import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
+
 import HorizontalSlider from "@/components/HorizontalSlider";
 
 export const dynamic = "force-dynamic";
@@ -13,53 +17,53 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="min-h-screen">
+    <main className="relative min-h-screen">
       <Hero />
 
-      
-    <div
-      className="relative h-[3em] w-full overflow-hidden bg-[#823038]">
-      <div className="narabi-track flex h-full w-max">
-        {Array.from({ length: 28 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex h-full w-55 shrink-0 items-center justify-center">
-            <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
-              narabi 
-            </span>
-            <span className="font-sans uppercase tracking-wide text-[#FFE4F3] ml-15">
-            ˚｡𖦹 ⋆｡°
-            </span>
-          </div>
-        ))}
+      <div className="relative h-[3em] w-full overflow-hidden bg-[#823038]">
+        <div className="narabi-track flex h-full w-max">
+          {Array.from({ length: 28 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex h-full w-55 shrink-0 items-center justify-center"
+            >
+              <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
+                narabi
+              </span>
+
+              <span className="ml-15 font-sans uppercase tracking-wide text-[#FFE4F3]">
+                ˚｡𖦹 ⋆｡°
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
 
-    <style>{`
-      .narabi-track {
-        animation: narabi-scroll 30s linear infinite;
-      }
-
-      @keyframes narabi-scroll {
-        from {
-          transform: translateX(0);
+      <style>{`
+        .narabi-track {
+          animation: narabi-scroll 30s linear infinite;
         }
 
-        to {
-          transform: translateX(-50%);
+        @keyframes narabi-scroll {
+          from {
+            transform: translateX(0);
+          }
+
+          to {
+            transform: translateX(-50%);
+          }
         }
-      }
-    `}</style>
+      `}</style>
 
-
-
-      <section className="w-full px-4 sm:px-6 sm:py-10 lg:px-8 bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] ">
+      {/* Próximos conciertos */}
+      <section className="w-full bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] px-4 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
               Próximos conciertos
             </p>
-            <h2 className="mt-3 text-5xl font-semibold  text-[#FDFDFF]">
+
+            <h2 className="mt-3 text-5xl font-semibold text-[#FDFDFF]">
               Conciertos disponibles !
             </h2>
           </div>
@@ -77,14 +81,13 @@ export default async function Home() {
                 key={project.id}
               >
                 <div>
-                  {/* Contenedor de la imagen */}
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-[#EEEEEE]">
                     <img
                       src={project.imagen || "/projects/placeholder.jpg"}
                       alt={project.Titulo}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
-                    {/* Etiqueta de fecha tipo calendario */}
+
                     {project["Dia del concierto"] ? (
                       <span className="absolute left-3 top-3 rounded-lg bg-white/90 px-3 py-1 text-xs font-semibold text-[#5C1F3A] shadow-sm">
                         {project["Dia del concierto"]}
@@ -97,10 +100,12 @@ export default async function Home() {
                       {project.Pais || "Global"}
                     </span>
                   </div>
+
                   <h3 className="mt-4 break-words text-xl font-semibold text-[#5C1F3A]">
                     {project.Titulo}
                   </h3>
                 </div>
+
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link
                     className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
@@ -115,16 +120,19 @@ export default async function Home() {
         )}
       </section>
 
-      <section className="w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-8 bg-[#FDFDFF]">
+      {/* Votaciones */}
+      <section className="w-full bg-[#FDFDFF] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
               Próximos conciertos
             </p>
+
             <h2 className="mt-3 text-2xl font-semibold tracking-normal text-[#5C1F3A]">
               Votaciones para próximos conciertos
             </h2>
           </div>
+
           {votingConcerts.length > 0 ? (
             <Link
               className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
@@ -150,14 +158,17 @@ export default async function Home() {
                   {concert.Pais || "Global"} ·{" "}
                   {concert["Dia del concierto"] || "Fecha a confirmar"}
                 </p>
+
                 <h3 className="mt-3 break-words text-xl font-semibold text-[#5C1F3A]">
                   {concert.Titulo}
                 </h3>
+
                 <p className="mt-2 text-sm leading-6 text-[#8A5468]">
                   {concert.candidates.length} fanproject
                   {concert.candidates.length === 1 ? "" : "s"} propuesto
                   {concert.candidates.length === 1 ? "" : "s"}.
                 </p>
+
                 <Link
                   className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
                   href="/votaciones"
@@ -169,6 +180,44 @@ export default async function Home() {
           </HorizontalSlider>
         )}
       </section>
+      <pre
+        className="
+          pointer-events-none
+          absolute
+          left-[110em]
+          top-[150em]
+          z-9999
+          -translate-x-1/2
+          whitespace-pre
+          text-[10px]
+          leading-1.5
+          text-[#823038]
+        "
+      >
+{`⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⢿⡀⠀⠀⠀⠀⣤⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⣤⣤⣀⣴⠏⠸⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡄⠈⠀⠀⠉⢙⣿⡿⠃⠀⠀⠠⠄⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠶⠀⠀⠀⣰⡏⠀⣀⠀⠸⡏⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⡴⠟⠛⢷⣤⣧⠀⠀⠰⣶⣿⣀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠈⠋⠀⠀⠘⠛⠿⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣄⣀⣀⡀⠀⠀⠀⠀⡀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠰⠀⠀⠀⠀⠀⣿⠛⠛⠿⠿⣿⣿⣷⡄⠀⠀⠁
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡀⣸⡏⠀⠀⠀⠀⠀⣼⡿⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠁⠀⢀⣀⠀⢀⣿⠃⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠿⠿⢿⣿⣷⣶⡆⠀⠘⠿⠿⠋⠀⠀⢿⣿⣿⣿⡏⠀⠀⠀⠘⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢠⡟⠀⠀⠀⠀⠀⣸⡇⠀⠀⠀⠀⠀⠀⠀⠈⠛⠛⠋⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣾⠃⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⢀⡄⠀⠀⠀⠀⠀⢀⡀⠀⠀
+⠀⠀⠀⠀⠀⣴⣶⣾⡏⠀⠀⠀⢀⠀⢸⣿⠀⠀⠀⠀⠀⢿⡲⠋⣧⣀⡀⠀⠘⡗⠛⣇⡀⠀
+⠀⠀⠀⠀⠀⠻⢿⡿⠃⠀⠀⢾⣿⣿⣿⠃⠀⠀⣄⠀⢀⣼⡥⣄⣶⠋⠁⠀⠛⠒⣶⠋⠉⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠋⠁⠀⠀⢰⣿⡄⠀⠀⠀⠈⠀⠀⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡏⢿⡄⠀⠀⠀⠀⠘⣶⣿⠤⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠚⠀⢀⣀⣠⣤⡤⠿⠀⠈⟟⠛⢛⣿⠟⠀⠁⠉⠀⠀⠀⠀⠀⠀
+⠀⠈⠁⠀⠀⢦⣤⣿⣀⡀⠀⠀⠀⠉⠻⢦⣄⡀⠀⠀⠀⢰⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣀⡄⠀⠀⠀⢰⠿⢿⡋⠁⠀⢀⡀⠀⠀⠀⣸⠃⢀⣤⣄⡈⣷⡀⠀⠀⠃⠀⠀⠀⠀⠀⠀⠀
+⠛⠟⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠁⠀⠀⠀⣿⡴⠟⠁⠉⠛⠾⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`}
+      </pre>
     </main>
   );
 }
