@@ -5,6 +5,7 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { getActivityDetails, updateFanProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES, getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { sectorInstructionsToText } from "@/lib/projects/sector-instructions";
+import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
@@ -19,23 +20,33 @@ export default async function EditActivityPage({ params }) {
   const profile = await getCurrentUserProfile(user);
   if (profile?.user_type !== "admin") redirect("/dashboard");
 
-  const activity = await getActivityDetails(id, activityId);
+  const [activity, fanbases] = await Promise.all([
+    getActivityDetails(id, activityId),
+    getOrganizedFanbasesForUser(user.uid),
+  ]);
   if (!activity) redirect(`/dashboard/projects/${id}`);
 
   async function handleUpdateActivity(formData) {
     "use server";
-    await requireAdmin();
+    const currentUser = await requireAdmin();
     const titulo = String(formData.get("titulo") || "").trim();
     const descripcion = String(formData.get("descripcion") || "").trim();
     const elementos = String(formData.get("elementos") || "");
     const estado = String(formData.get("estado") || "");
     const instruccionesPorSector = String(formData.get("instruccionesPorSector") || "");
+    const fanbaseId = String(formData.get("fanbaseId") || "").trim();
+    const availableFanbases = await getOrganizedFanbasesForUser(currentUser.uid);
+    const fanbase = fanbaseId ? availableFanbases.find((item) => item.id === fanbaseId) : null;
 
     if (!titulo || !descripcion) {
       throw new Error("Completá el título y la descripción del fanproject.");
     }
 
-    const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos, estado, instruccionesPorSector });
+    if (fanbaseId && !fanbase) {
+      throw new Error("Seleccioná una fanbase que administres.");
+    }
+
+    const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos, estado, instruccionesPorSector, fanbase });
     if (res.success) {
       if (res.statusChanged) {
         try {
@@ -139,6 +150,28 @@ export default async function EditActivityPage({ params }) {
           />
           <p id="sector-instructions-help" className="mt-2 text-xs text-[#8A5468]">
             Una línea por sector, usando el formato: Sector | Instrucción.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="fanbaseId">
+            Fanbase organizadora
+          </label>
+          <select
+            id="fanbaseId"
+            name="fanbaseId"
+            defaultValue={activity.fanbaseId || ""}
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          >
+            <option value="">Publicación personal</option>
+            {fanbases.map((fanbase) => (
+              <option key={fanbase.id} value={fanbase.id}>
+                {fanbase.name} · {fanbase.kpopGroup}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs text-[#8A5468]">
+            Vinculá el fanproject a una fanbase para mostrar su autoría pública.
           </p>
         </div>
 

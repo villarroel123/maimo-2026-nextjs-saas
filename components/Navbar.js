@@ -87,6 +87,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
   const links = [
     { href: "/", label: "Home" },
     { href: "/votaciones", label: "Votaciones" },
+    { href: "/fanbases", label: "Fanbases" },
     ...(user
       ? [
           { href: "/dashboard", label: "Dashboard" },

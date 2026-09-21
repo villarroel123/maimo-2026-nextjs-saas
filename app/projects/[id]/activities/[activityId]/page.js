@@ -166,6 +166,24 @@ export default async function ActivityDetailPage({ params }) {
                 <h1 className="text-3xl font-bold tracking-tight text-[#5C1F3A] sm:text-4xl">
                   {activity.titulo}
                 </h1>
+                {(activity.authorName || activity.fanbaseName) ? (
+                  <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-[#7F4A5E]">
+                    <span className="grid size-8 place-items-center rounded-full bg-white text-xs font-bold text-[#823038]">
+                      {(activity.authorName || activity.fanbaseName).charAt(0).toUpperCase()}
+                    </span>
+                    <span>
+                      Publicado por <strong className="font-semibold text-[#5C1F3A]">{activity.authorName || "la comunidad"}</strong>
+                    </span>
+                    {activity.fanbaseName ? (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <Link className="font-semibold text-[#B53E66] hover:underline" href={`/fanbases/${activity.fanbaseId}`}>
+                          Integrante de {activity.fanbaseName}
+                        </Link>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
                 <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#7F4A5E] sm:text-lg">
                   {activity.descripcion}
                 </p>

@@ -64,6 +64,19 @@ export default async function ProjectDetailPage({ params }) {
                       {status.label}
                     </span>
                     <h3 className="mt-3 text-lg font-bold text-[#5C1F3A]">{sub.titulo}</h3>
+                    {(sub.authorName || sub.fanbaseName) ? (
+                      <p className="mt-2 text-sm text-[#8A5468]">
+                        Por {sub.authorName || "la comunidad"}
+                        {sub.fanbaseName ? (
+                          <>
+                            {" · "}
+                            <Link className="font-semibold text-[#B53E66] hover:underline" href={`/fanbases/${sub.fanbaseId}`}>
+                              {sub.fanbaseName}
+                            </Link>
+                          </>
+                        ) : null}
+                      </p>
+                    ) : null}
                   </div>
                   <Link
                     href={`/projects/${project.id}/activities/${sub.id}`}

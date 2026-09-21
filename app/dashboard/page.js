@@ -71,6 +71,12 @@ export default async function DashboardPage() {
                 Gestionar usuarios
               </Link>
               <Link
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[#F2B8CF] bg-white px-4 text-sm font-semibold text-[#5C1F3A] transition hover:border-[#C0567A] hover:bg-[#FFE4F3]"
+                href="/dashboard/fanbases"
+              >
+                Gestionar fanbases
+              </Link>
+              <Link
                 className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
                 href="/dashboard/projects/new"
               >

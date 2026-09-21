@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
 import { createFanProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
+import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
@@ -16,21 +17,42 @@ export default async function NewActivityPage({ params }) {
 
   const profile = await getCurrentUserProfile(user);
   if (profile?.user_type !== "admin") redirect("/dashboard");
+  const fanbases = await getOrganizedFanbasesForUser(user.uid);
 
 async function handleCreateActivity(formData) {
     "use server";
-    await requireAdmin();
+    const currentUser = await requireAdmin();
+    const currentProfile = await getCurrentUserProfile(currentUser);
     const titulo = String(formData.get("titulo") || "").trim();
     const descripcion = String(formData.get("descripcion") || "").trim();
     const elementos = String(formData.get("elementos") || "");
     const estado = String(formData.get("estado") || "");
     const instruccionesPorSector = String(formData.get("instruccionesPorSector") || "");
+    const fanbaseId = String(formData.get("fanbaseId") || "").trim();
+    const availableFanbases = await getOrganizedFanbasesForUser(currentUser.uid);
+    const fanbase = fanbaseId ? availableFanbases.find((item) => item.id === fanbaseId) : null;
 
     if (!titulo || !descripcion) {
       throw new Error("Completá el título y la descripción del fanproject.");
     }
 
-    const res = await createFanProject(id, { titulo, descripcion, elementos, estado, instruccionesPorSector });
+    if (fanbaseId && !fanbase) {
+      throw new Error("Seleccioná una fanbase que administres.");
+    }
+
+    const res = await createFanProject(id, {
+      titulo,
+      descripcion,
+      elementos,
+      estado,
+      instruccionesPorSector,
+      author: {
+        uid: currentUser.uid,
+        name: currentProfile?.displayName || currentUser.name || currentUser.email?.split("@")[0] || "Fan de Narabi",
+        photoURL: currentProfile?.photoURL || currentUser.picture || "",
+      },
+      fanbase,
+    });
     if (res.success) {
       redirect(`/dashboard/projects/${id}`);
     }
@@ -118,6 +140,27 @@ async function handleCreateActivity(formData) {
           />
           <p id="sector-instructions-help" className="mt-2 text-xs text-[#8A5468]">
             Escribí una indicación por línea, separando el sector y la instrucción con |.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="fanbaseId">
+            Publicar como fanbase
+          </label>
+          <select
+            id="fanbaseId"
+            name="fanbaseId"
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          >
+            <option value="">Publicación personal</option>
+            {fanbases.map((fanbase) => (
+              <option key={fanbase.id} value={fanbase.id}>
+                {fanbase.name} · {fanbase.kpopGroup}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs text-[#8A5468]">
+            Solo aparecen las fanbases en las que tu cuenta es fundadora u organizadora.
           </p>
         </div>
 
