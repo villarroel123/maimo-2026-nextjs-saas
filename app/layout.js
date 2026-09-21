@@ -43,7 +43,7 @@ export default async function RootLayout({ children }) {
       lang="es"
       className={`${geistMono.variable} ${paytoneOne.variable} ${raleway.variable} dark`}
     >
-      <body className="flex min-h-screen flex-col bg-[#FDFDFF] antialiased">
+      <body className="flex  flex-col  antialiased">
         <FavoritesProvider>
           <Navbar
             hasUnreadNotifications={hasUnreadNotifications}

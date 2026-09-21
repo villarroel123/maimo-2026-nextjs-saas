@@ -14,7 +14,7 @@ function isActivePath(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
+function NavLink({ hasIndicator = false, href, isScrolled = false, label, onClick, pathname }) {
   const active = isActivePath(pathname, href);
 
   return (
@@ -22,7 +22,9 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
       className={`relative inline-flex min-h-10 items-center rounded-full px-3.5 py-2 text-sm font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
         active
           ? "bg-[#EEEEEE] text-[#823038] shadow-sm"
-          : "text-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038]"
+          : isScrolled
+            ? "text-[#823038] hover:bg-[#EEEEEE] hover:text-[#823038]"
+            : "text-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038]"
       }`}
       href={href}
       onClick={onClick}
@@ -32,7 +34,7 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
         {hasIndicator ? (
           <span
             aria-label="Hay notificaciones sin leer"
-            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#EEEEEE] ring-2 ring-[#0D1821]"
+            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#EEEEEE] ring-2 ring-[#823038]"
           />
         ) : null}
       </span>
@@ -40,15 +42,15 @@ function NavLink({ hasIndicator = false, href, label, onClick, pathname }) {
   );
 }
 
-function ProfileLink({ avatarUrl, displayName, onClick, compact = false }) {
+function ProfileLink({ avatarUrl, displayName, isScrolled = false, onClick, compact = false }) {
   const initial = displayName.trim().charAt(0).toUpperCase() || "N";
 
   return (
     <Link
       aria-label="Abrir Mi agenda"
-      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#EEEEEE]/40 bg-[#EEEEEE]/10 p-1.5 text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-        compact ? "pr-1.5" : "pr-3"
-      }`}
+      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#EEEEEE]/40 bg-[#EEEEEE]/10 p-1.5 transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+        isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+      } ${compact ? "pr-1.5" : "pr-3"}`}
       href="/profile"
       onClick={onClick}
       title="Mi agenda"
@@ -110,16 +112,12 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
     <nav
       className={`sticky top-0 z-50 border-b transition-[background-color,box-shadow,border-color] duration-300 ${
         isScrolled
-          ? "border-[#823038] bg-[#823038]/95 shadow-[0_10px_30px_rgba(13,24,33,0.24)] backdrop-blur"
-          : "border-[#0D1821] bg-[#0D1821]/95 backdrop-blur"
+          ? "border-[#823038]/40 bg-[#FFE4F3]/60 shadow-[0_10px_30px_rgba(13,24,33,0.24)] backdrop-blur"
+          : "border-[#823038] bg-[#823038]/95"
       }`}
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div
-          className={`flex items-center justify-between gap-3 transition-[min-height,padding] duration-300 ${
-            isScrolled ? "min-h-14 py-2" : "min-h-16 py-3"
-          }`}
-        >
+        <div className="flex min-h-14 items-center justify-between gap-3 py-2">
           <Link
             className="group flex min-w-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038]"
             href="/"
@@ -127,14 +125,16 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
           >
             <Image
               alt="Narabi"
-              className={`h-auto shrink-0 transition-[width] duration-300 ${isScrolled ? "w-8" : "w-9"}`}
+              className="h-auto w-8 shrink-0"
               height={36}
               priority
               src="/items/narabi_logo.png"
               width={36}
             />
             <span
-              className="min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] text-[#EEEEEE] transition-colors group-hover:text-white"
+              className={`min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] transition-colors group-hover:text-white ${
+                isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+              }`}
             >
               Narabi
             </span>
@@ -146,6 +146,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 <NavLink
                   hasIndicator={link.hasIndicator}
                   href={link.href}
+                  isScrolled={isScrolled}
                   key={link.href}
                   label={link.label}
                   pathname={pathname}
@@ -157,10 +158,12 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               {actions}
               {user ? (
                 <>
-                  <ProfileLink avatarUrl={avatarUrl} displayName={displayName} />
+                  <ProfileLink avatarUrl={avatarUrl} displayName={displayName} isScrolled={isScrolled} />
                   <form action={logout}>
                     <button
-                      className="inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold text-[#EEEEEE] transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
+                      className={`inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+                        isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                      }`}
                       type="submit"
                     >
                       Cerrar sesión
@@ -184,6 +187,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 avatarUrl={avatarUrl}
                 compact
                 displayName={displayName}
+                isScrolled={isScrolled}
                 onClick={closeMenu}
               />
             ) : null}
@@ -191,7 +195,9 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               aria-controls="mobile-menu"
               aria-expanded={isOpen}
               aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-              className="grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent text-[#EEEEEE] transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
+              className={`grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+                isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+              }`}
               onClick={() => setOpenMenuForPath((value) => (value === pathname ? null : pathname))}
               type="button"
             >
@@ -216,6 +222,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 <NavLink
                   hasIndicator={link.hasIndicator}
                   href={link.href}
+                  isScrolled={isScrolled}
                   key={link.href}
                   label={link.label}
                   onClick={closeMenu}
@@ -227,14 +234,21 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
             <div className="mt-3 grid min-w-0 gap-3 border-t border-[#EEEEEE]/25 pt-3">
               {actions}
               {user ? (
-                <ProfileLink avatarUrl={avatarUrl} displayName={displayName} onClick={closeMenu} />
+                <ProfileLink
+                  avatarUrl={avatarUrl}
+                  displayName={displayName}
+                  isScrolled={isScrolled}
+                  onClick={closeMenu}
+                />
               ) : null}
             </div>
 
             {user ? (
               <form action={logout} className="mt-3">
                 <button
-                  className="h-10 w-full rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold text-[#EEEEEE] transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
+                  className={`h-10 w-full rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+                    isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                  }`}
                   type="submit"
                 >
                   Cerrar sesión

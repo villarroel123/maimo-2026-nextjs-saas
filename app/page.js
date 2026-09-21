@@ -16,13 +16,53 @@ export default async function Home() {
     <main className="min-h-screen bg-[#EEEEEE] text-[#0D1821]">
       <Hero />
 
-      <section className="mx-auto mt-10 w-full max-w-6xl px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8 bg-[#FFE4F3]">
+      
+<div
+  className="relative mt-0 h-[3em] w-full overflow-hidden"
+  style={{ backgroundColor: "#823038" }}
+>
+  <div className="narabi-track flex h-full w-max">
+    {Array.from({ length: 28 }).map((_, i) => (
+      <div
+        key={i}
+        className="flex h-full w-55 shrink-0 items-center justify-center"
+      >
+        <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
+          narabi 
+        </span>
+        <span className="font-sans uppercase tracking-wide text-[#FFE4F3] ml-15">
+         ˚｡𖦹 ⋆｡°
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>{`
+  .narabi-track {
+    animation: narabi-scroll 30s linear infinite;
+  }
+
+  @keyframes narabi-scroll {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+`}</style>
+
+
+
+      <section className="mx-auto mt-10 w-full max-w-6xl px-4 py-8 sm:mt-16 sm:px-6 sm:py-10 lg:px-8 bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] ">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
               Próximos conciertos
             </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-normal text-[#5C1F3A]">
+            <h2 className="mt-3 text-5xl font-semibold  text-[#5C1F3A]">
               Conciertos disponibles
             </h2>
           </div>
@@ -35,7 +75,10 @@ export default async function Home() {
         ) : (
           <HorizontalSlider label="conciertos disponibles">
             {projects.map((project) => (
-              <article className="flex w-[86%] shrink-0 snap-start flex-col justify-between border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]" key={project.id}>
+              <article
+                className="flex w-[86%] shrink-0 snap-start flex-col justify-between border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
+                key={project.id}
+              >
                 <div>
                   {/* Contenedor de la imagen */}
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-[#EEEEEE]">
@@ -86,7 +129,10 @@ export default async function Home() {
             </h2>
           </div>
           {votingConcerts.length > 0 ? (
-            <Link className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]" href="/votaciones">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
+              href="/votaciones"
+            >
               Ver todas las votaciones
             </Link>
           ) : null}
@@ -99,15 +145,26 @@ export default async function Home() {
         ) : (
           <HorizontalSlider label="votaciones para próximos conciertos">
             {votingConcerts.map((concert) => (
-              <article className="w-[86%] shrink-0 snap-start border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]" key={concert.id}>
+              <article
+                className="w-[86%] shrink-0 snap-start border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
+                key={concert.id}
+              >
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#C0567A]">
-                  {concert.Pais || "Global"} · {concert["Dia del concierto"] || "Fecha a confirmar"}
+                  {concert.Pais || "Global"} ·{" "}
+                  {concert["Dia del concierto"] || "Fecha a confirmar"}
                 </p>
-                <h3 className="mt-3 break-words text-xl font-semibold text-[#5C1F3A]">{concert.Titulo}</h3>
+                <h3 className="mt-3 break-words text-xl font-semibold text-[#5C1F3A]">
+                  {concert.Titulo}
+                </h3>
                 <p className="mt-2 text-sm leading-6 text-[#8A5468]">
-                  {concert.candidates.length} fanproject{concert.candidates.length === 1 ? "" : "s"} propuesto{concert.candidates.length === 1 ? "" : "s"}.
+                  {concert.candidates.length} fanproject
+                  {concert.candidates.length === 1 ? "" : "s"} propuesto
+                  {concert.candidates.length === 1 ? "" : "s"}.
                 </p>
-                <Link className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]" href="/votaciones">
+                <Link
+                  className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
+                  href="/votaciones"
+                >
                   Ver y votar
                 </Link>
               </article>
