@@ -3,7 +3,9 @@ import Image from "next/image";
 
 import Hero from "@/components/Hero";
 
-import { getProjects } from "@/lib/projects/projects";
+import HomeSearch from "@/components/home/HomeSearch";
+
+import { getProjectsWithFanProjects } from "@/lib/projects/projects";
 
 import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 
@@ -15,10 +17,38 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [projects, votingConcerts, fanbases] = await Promise.all([
-    getProjects(),
+    getProjectsWithFanProjects(),
     getFanProjectVotingConcerts(),
     getFanbases(),
   ]);
+  const searchData = {
+    concerts: projects.map((project) => ({
+      key: `concert-${project.id}`,
+      href: `/projects/${project.id}`,
+      title: project.Titulo || "Concierto sin nombre",
+      country: project.Pais || "",
+      date: project["Dia del concierto"] || "",
+      subtitle: [project.Pais, project["Dia del concierto"]].filter(Boolean).join(" · "),
+    })),
+    fanprojects: projects.flatMap((project) => (
+      (project.subitems || []).map((fanproject) => ({
+        key: `fanproject-${project.id}-${fanproject.id}`,
+        href: `/projects/${project.id}/activities/${fanproject.id}`,
+        title: fanproject.titulo || "Fanproject sin título",
+        description: fanproject.descripcion || "",
+        concertTitle: project.Titulo || "Concierto",
+        subtitle: project.Titulo || "Concierto",
+      }))
+    )),
+    fanbases: fanbases.map((fanbase) => ({
+      key: `fanbase-${fanbase.id}`,
+      href: `/fanbases/${fanbase.id}`,
+      name: fanbase.name,
+      kpopGroup: fanbase.kpopGroup,
+      title: fanbase.kpopGroup || fanbase.name,
+      subtitle: fanbase.name,
+    })),
+  };
 
   return (
     <main className="relative min-h-screen">
@@ -58,6 +88,8 @@ export default async function Home() {
           }
         }
       `}</style>
+
+      <HomeSearch searchData={searchData} />
 
       {/* Próximos conciertos */}
       <section className="w-full bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] px-4 sm:px-6 sm:py-10 lg:px-8">
