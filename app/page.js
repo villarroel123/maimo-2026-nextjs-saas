@@ -7,6 +7,7 @@ import Hero from "@/components/Hero";
 import HomeSearch from "@/components/home/HomeSearch";
 
 import { getProjectsWithFanProjects } from "@/lib/projects/projects";
+import { getConcertImage } from "@/lib/projects/concert-image";
 
 import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 
@@ -213,7 +214,7 @@ export default async function Home() {
                 <div>
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-2xl bg-[#EEEEEE]">
                     <img
-                      src={project.imagen || "/projects/placeholder.jpg"}
+                      src={getConcertImage(project)}
                       alt={project.Titulo}
                       className="h-full w-full object-cover"
                     />
