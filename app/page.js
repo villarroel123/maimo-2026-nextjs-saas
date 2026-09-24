@@ -174,7 +174,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden rounded-t-3xl bg-[#823038]">
+      <div className="relative left-1/2 right-1/2 ml-[-50vw] mr-[-50vw] w-screen overflow-hidden rounded-t-3xl bg-[#823038]">
         <Image
           src="/items/ondas_dos.png"
           alt=""

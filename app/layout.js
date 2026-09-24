@@ -27,7 +27,7 @@ const raleway = Raleway({
 });
 
 export const metadata = {
-  title: "SaaS Starter",
+  title: "Narabi",
   description: "Next.js server-side boilerplate with Firebase Auth",
 };
 

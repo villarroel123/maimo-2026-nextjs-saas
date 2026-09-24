@@ -147,7 +147,7 @@ export default async function ActivityDetailPage({ params }) {
 
         <section className="relative mt-5 overflow-hidden rounded-3xl border border-[#F2B8CF] bg-[#FFE4F3] p-6 shadow-[0_18px_45px_-34px_rgba(92,31,58,0.7)] sm:p-9">
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/45" />
-          <div className="pointer-events-none absolute -bottom-16 right-24 h-36 w-36 rounded-full border-[18px] border-[#F8C9DE]/70" />
+          <div className="pointer-events-none absolute -bottom-16 right-24 h-36 w-36 rounded-full border-18 border-[#F8C9DE]/70" />
 
           <div className="relative">
             <div className="flex flex-wrap items-center gap-3">
@@ -332,7 +332,7 @@ export default async function ActivityDetailPage({ params }) {
                           {formatCommentDate(comment.createdAt)}
                         </time>
                       </div>
-                      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#754B5B]">
+                      <p className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-[#754B5B]">
                         {comment.message}
                       </p>
                     </div>
@@ -346,7 +346,7 @@ export default async function ActivityDetailPage({ params }) {
                         </summary>
                         <form
                           action={addReply}
-                          className="mt-3 w-full min-w-[15rem] rounded-xl border border-[#F2B8CF] bg-[#FFF7FB] p-3 sm:min-w-[22rem]"
+                          className="mt-3 w-full min-w-60 rounded-xl border border-[#F2B8CF] bg-[#FFF7FB] p-3 sm:min-w-88"
                         >
                           <input name="commentId" type="hidden" value={comment.id} />
                           <label htmlFor={`reply-${comment.id}`} className="sr-only">
@@ -404,7 +404,7 @@ export default async function ActivityDetailPage({ params }) {
                                       {formatCommentDate(reply.createdAt)}
                                     </time>
                                   </div>
-                                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#754B5B]">
+                                  <p className="mt-1.5 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-[#754B5B]">
                                     {reply.message}
                                   </p>
                                 </div>
