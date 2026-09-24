@@ -14,17 +14,24 @@ function isActivePath(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ hasIndicator = false, href, isScrolled = false, label, onClick, pathname }) {
+function NavLink({
+  hasIndicator = false,
+  href,
+  isScrolled = false,
+  label,
+  onClick,
+  pathname,
+}) {
   const active = isActivePath(pathname, href);
 
   return (
     <Link
       className={`relative inline-flex min-h-10 items-center rounded-full px-3.5 py-2 text-sm font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
         active
-          ? "bg-[#EEEEEE] text-[#823038] shadow-sm"
+          ? "bg-[#FDFDFF] text-[#823038] shadow-sm"
           : isScrolled
-            ? "text-[#823038] hover:bg-[#EEEEEE] hover:text-[#823038]"
-            : "text-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038]"
+            ? "text-[#823038] hover:bg-[#FDFDFF] hover:text-[#823038]"
+            : "text-[#FDFDFF] hover:bg-[#FFE4F3] hover:text-[#823038]"
       }`}
       href={href}
       onClick={onClick}
@@ -34,7 +41,7 @@ function NavLink({ hasIndicator = false, href, isScrolled = false, label, onClic
         {hasIndicator ? (
           <span
             aria-label="Hay notificaciones sin leer"
-            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#EEEEEE] ring-2 ring-[#823038]"
+            className="absolute -right-2 -top-1.5 size-2.5 rounded-full bg-[#FDFDFF] ring-2 ring-[#823038]"
           />
         ) : null}
       </span>
@@ -42,14 +49,20 @@ function NavLink({ hasIndicator = false, href, isScrolled = false, label, onClic
   );
 }
 
-function ProfileLink({ avatarUrl, displayName, isScrolled = false, onClick, compact = false }) {
+function ProfileLink({
+  avatarUrl,
+  displayName,
+  isScrolled = false,
+  onClick,
+  compact = false,
+}) {
   const initial = displayName.trim().charAt(0).toUpperCase() || "N";
 
   return (
     <Link
       aria-label="Abrir Mi agenda"
-      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#EEEEEE]/40 bg-[#EEEEEE]/10 p-1.5 transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-        isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#FDFDFF]/40 bg-[#FDFDFF]/10 p-1.5 transition hover:border-[#FDFDFF] hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${
+        isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"
       } ${compact ? "pr-1.5" : "pr-3"}`}
       href="/profile"
       onClick={onClick}
@@ -58,32 +71,45 @@ function ProfileLink({ avatarUrl, displayName, isScrolled = false, onClick, comp
       {avatarUrl ? (
         <img
           alt=""
-          className="size-7 shrink-0 rounded-full border border-[#EEEEEE]/60 object-cover"
+          className="size-7 shrink-0 rounded-full border border-[#FDFDFF]/60 object-cover"
           referrerPolicy="no-referrer"
           src={avatarUrl}
         />
       ) : (
         <span
           aria-hidden="true"
-          className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EEEEEE] text-xs font-bold text-[#823038]"
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FDFDFF] text-xs font-bold text-[#823038]"
         >
           {initial}
         </span>
       )}
+
       {compact ? null : (
-        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">{displayName}</span>
+        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">
+          {displayName}
+        </span>
       )}
     </Link>
   );
 }
 
-export default function Navbar({ actions, hasUnreadNotifications = false, profile, user }) {
+export default function Navbar({
+  actions,
+  hasUnreadNotifications = false,
+  profile,
+  user,
+}) {
   const pathname = usePathname();
   const [openMenuForPath, setOpenMenuForPath] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const isOpen = openMenuForPath === pathname;
-  const displayName = profile?.displayName || user?.name || user?.email?.split("@")[0] || "Mi agenda";
+  const displayName =
+    profile?.displayName ||
+    user?.name ||
+    user?.email?.split("@")[0] ||
+    "Mi agenda";
   const avatarUrl = profile?.photoURL || user?.picture || "";
+
   const links = [
     { href: "/", label: "Home" },
     { href: "/votaciones", label: "Votaciones" },
@@ -91,7 +117,11 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
     ...(user
       ? [
           { href: "/dashboard", label: "Dashboard" },
-          { href: "/notifications", label: "Notificaciones", hasIndicator: hasUnreadNotifications },
+          {
+            href: "/notifications",
+            label: "Notificaciones",
+            hasIndicator: hasUnreadNotifications,
+          },
         ]
       : []),
   ];
@@ -132,9 +162,10 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               src="/items/narabi_logo.png"
               width={36}
             />
+
             <span
               className={`min-w-0 overflow-wrap-anywhere text-sm uppercase tracking-[0.14em] transition-colors group-hover:text-white ${
-                isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"
               }`}
             >
               Narabi
@@ -142,7 +173,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
           </Link>
 
           <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex">
-            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#EEEEEE]/25 bg-[#EEEEEE]/10 p-1 shadow-sm">
+            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#EEEEEE]/25 bg-[#FDFDFF]/10 p-1 shadow-sm">
               {links.map((link) => (
                 <NavLink
                   hasIndicator={link.hasIndicator}
@@ -157,13 +188,21 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
 
             <div className="flex min-w-0 items-center justify-end gap-2">
               {actions}
+
               {user ? (
                 <>
-                  <ProfileLink avatarUrl={avatarUrl} displayName={displayName} isScrolled={isScrolled} />
+                  <ProfileLink
+                    avatarUrl={avatarUrl}
+                    displayName={displayName}
+                    isScrolled={isScrolled}
+                  />
+
                   <form action={logout}>
                     <button
-                      className={`inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-                        isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                      className={`inline-flex h-10 items-center justify-center rounded-full border border-[#FDFDFF] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${
+                        isScrolled
+                          ? "text-[#823038]"
+                          : "text-[#FDFDFF]"
                       }`}
                       type="submit"
                     >
@@ -173,7 +212,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 </>
               ) : (
                 <Link
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#EEEEEE] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#EEEEEE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#FDFDFF] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#FDFDFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF]"
                   href="/login"
                 >
                   Iniciar sesión
@@ -192,6 +231,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
                 onClick={closeMenu}
               />
             ) : null}
+
             <button
               aria-controls="mobile-menu"
               aria-expanded={isOpen}
@@ -199,7 +239,11 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               className={`grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
                 isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
               }`}
-              onClick={() => setOpenMenuForPath((value) => (value === pathname ? null : pathname))}
+              onClick={() =>
+                setOpenMenuForPath((value) =>
+                  value === pathname ? null : pathname,
+                )
+              }
               type="button"
             >
               <span className="grid gap-1.5" aria-hidden="true">
@@ -213,7 +257,9 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
 
         <div
           className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 lg:hidden ${
-            isOpen ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr] pb-0"
+            isOpen
+              ? "grid-rows-[1fr] pb-4"
+              : "grid-rows-[0fr] pb-0"
           }`}
           id="mobile-menu"
         >
@@ -234,6 +280,7 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
 
             <div className="mt-3 grid min-w-0 gap-3 border-t border-[#EEEEEE]/25 pt-3">
               {actions}
+
               {user ? (
                 <ProfileLink
                   avatarUrl={avatarUrl}
@@ -248,7 +295,9 @@ export default function Navbar({ actions, hasUnreadNotifications = false, profil
               <form action={logout} className="mt-3">
                 <button
                   className={`h-10 w-full rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-                    isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                    isScrolled
+                      ? "text-[#823038]"
+                      : "text-[#EEEEEE]"
                   }`}
                   type="submit"
                 >
