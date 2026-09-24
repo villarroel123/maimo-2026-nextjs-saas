@@ -314,7 +314,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <pre
+      {/*<pre
         className="
           pointer-events-none
           absolute
@@ -351,7 +351,7 @@ export default async function Home() {
 ⣀⡄⠀⠀⠀⢰⠿⢿⡋⠁⠀⢀⡀⠀⠀⠀⣸⠃⢀⣤⣄⡈⣷⡀⠀⠀⠃⠀⠀⠀⠀⠀⠀⠀
 ⠛⠟⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠁⠀⠀⠀⣿⡴⠟⠁⠉⠛⠾⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`}
-      </pre>
+      </pre>*/}
     </main>
   );
 }
