@@ -6,6 +6,7 @@ import { getProjectWithDetails, updateProject } from "@/lib/projects/projects";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
+import VenuePicker from "@/components/venues/VenuePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +28,15 @@ export default async function EditProjectPage({ params }) {
     const pais = String(formData.get("pais") || "").trim();
     const fecha = String(formData.get("fecha") || "").trim();
     const ubicacion = String(formData.get("ubicacion") || "").trim();
+    const venuePlaceId = String(formData.get("venuePlaceId") || "").trim();
+    const venueManualName = String(formData.get("venueManualName") || "").trim();
     const imagen = String(formData.get("imagen") || "").trim();
 
     if (!titulo || !pais || !fecha) {
       throw new Error("Completá el título, país y fecha del concierto.");
     }
 
-    const res = await updateProject(id, { titulo, pais, fecha, ubicacion, imagen });
+    const res = await updateProject(id, { titulo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
     if (res.success) {
       if (res.changes.length > 0) {
         const updatedFields = res.changes.join(" y ");
@@ -79,6 +82,8 @@ export default async function EditProjectPage({ params }) {
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           />
         </div>
+
+        <VenuePicker initialManualName={project.venueManualName || ""} initialPlaceId={project.venuePlaceId || ""} />
 
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">

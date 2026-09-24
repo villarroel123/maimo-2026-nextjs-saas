@@ -5,6 +5,7 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { createProject } from "@/lib/projects/projects";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
+import VenuePicker from "@/components/venues/VenuePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +23,15 @@ export default async function NewProjectPage() {
     const pais = String(formData.get("pais") || "").trim();
     const fecha = String(formData.get("fecha") || "").trim();
     const ubicacion = String(formData.get("ubicacion") || "").trim();
+    const venuePlaceId = String(formData.get("venuePlaceId") || "").trim();
+    const venueManualName = String(formData.get("venueManualName") || "").trim();
     const imagen = String(formData.get("imagen") || "").trim();
 
     if (!titulo || !pais || !fecha) {
       throw new Error("Completá el título, país y fecha del concierto.");
     }
 
-    const res = await createProject({ titulo, pais, fecha, ubicacion, imagen });
+    const res = await createProject({ titulo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
     if (res.success) {
       redirect("/dashboard");
     }
@@ -59,6 +62,8 @@ export default async function NewProjectPage() {
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           />
         </div>
+
+        <VenuePicker />
 
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2">

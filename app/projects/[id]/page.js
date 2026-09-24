@@ -4,6 +4,7 @@ import { getProjectWithDetails } from "@/lib/projects/projects";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { getFanprojectImage } from "@/lib/projects/fanproject-image";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
+import VenueInfo from "@/components/venues/VenueInfo";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function ProjectDetailPage({ params }) {
       <span className="text-xs font-semibold uppercase tracking-widest text-[#C0567A]">
         {project.Pais || "Global"} • {project["Dia del concierto"]}
       </span>
+      <VenueInfo manualName={project.venueManualName || ""} placeId={project.venuePlaceId || ""} />
       {project.Ubicacion ? (
         <p className="mt-2 text-sm text-[#8A5468]">Punto de encuentro: {project.Ubicacion}</p>
       ) : null}

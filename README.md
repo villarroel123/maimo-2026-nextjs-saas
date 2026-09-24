@@ -152,6 +152,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 FIREBASE_STORAGE=false
 
+# Google Places para buscar recintos (opcional)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+
 # Firebase Admin SDK
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
@@ -168,6 +171,19 @@ Las variables con prefijo `NEXT_PUBLIC_` son visibles desde el cliente. Las vari
 La clave privada debe conservar los saltos de linea escapados mediante `\n`.
 
 El archivo `.env` no debe subirse al repositorio.
+
+## Recintos con Google Places
+
+Al crear o editar un concierto, el dashboard permite elegir un estadio o teatro desde las sugerencias de Google Places. Los fanprojects de ese concierto comparten el recinto; `Ubicacion` sigue siendo el punto de encuentro. Si la API no está configurada, no se pueden seleccionar nuevos recintos. Los nombres cargados manualmente con versiones anteriores se conservan al editar.
+
+Para activar las sugerencias:
+
+1. En Google Cloud, habilitar la facturación, **Maps JavaScript API** y **Places API (New)**.
+2. Crear una clave para navegador restringida a los sitios autorizados (por ejemplo, `http://localhost:3000/*` y el dominio de Vercel) y a las APIs habilitadas.
+3. Agregar `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` en `.env` y en las variables de entorno de Vercel para Production y Preview.
+4. Reiniciar `npm run dev` y volver a desplegar en Vercel para incorporar la variable pública al navegador.
+
+Se guarda el `placeId` de Google como referencia del recinto. El nombre y la dirección se consultan cuando se muestran; no se guardan permanentemente como datos de Google. La clave pública debe estar restringida por sitios y APIs. Google Maps Platform requiere facturación incluso cuando el uso queda dentro de las cuotas sin costo. Antes de publicar datos de Google Places, revisar sus requisitos de atribución, términos y privacidad.
 
 ## Notificaciones Y Email
 

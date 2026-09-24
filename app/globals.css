@@ -81,3 +81,32 @@
   }
 
 }
+
+@layer components {
+  .venue-autocomplete {
+    display: block;
+    width: 100%;
+    color-scheme: light;
+    background-color: #fff;
+    color: #5C1F3A;
+    border: 0;
+    border-radius: 0.5rem;
+    font-family: var(--font-raleway), Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+  }
+
+  .venue-autocomplete::part(input) {
+    background-color: #fff;
+    color: #5C1F3A;
+    border: 0;
+    border-radius: 0.5rem;
+  }
+
+  .venue-autocomplete::part(prediction-list) {
+    color-scheme: light;
+    background-color: #fff;
+    color: #5C1F3A;
+    border: 1px solid #F2B8CF;
+    border-radius: 0.5rem;
+  }
+}

@@ -2,11 +2,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
-import { createFanProject } from "@/lib/projects/projects";
+import { createFanProject, getProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
 import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
+import VenueInfo from "@/components/venues/VenueInfo";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,11 @@ export default async function NewActivityPage({ params }) {
 
   const profile = await getCurrentUserProfile(user);
   if (profile?.user_type !== "admin") redirect("/dashboard");
-  const fanbases = await getOrganizedFanbasesForUser(user.uid);
+  const [fanbases, project] = await Promise.all([
+    getOrganizedFanbasesForUser(user.uid),
+    getProject(id),
+  ]);
+  if (!project) redirect("/dashboard/projects");
 
 async function handleCreateActivity(formData) {
     "use server";
@@ -69,6 +74,15 @@ async function handleCreateActivity(formData) {
 
       <h1 className="text-3xl font-bold text-[#5C1F3A] mb-2">Nueva Actividad</h1>
       <p className="text-sm text-[#8A5468] mb-8">Agrega un nuevo fanproject para este concierto.</p>
+
+      <div className="mb-6 rounded-xl border border-[#F2B8CF] bg-white p-4 text-sm text-[#5C1F3A]">
+        <p className="font-semibold">Concierto: {project.Titulo}</p>
+        <VenueInfo manualName={project.venueManualName || ""} placeId={project.venuePlaceId || ""} />
+        <p className="mt-2 text-xs text-[#8A5468]">
+          Todos los fanprojects comparten el recinto del concierto. Podés cambiarlo desde
+          {" "}<Link className="font-semibold text-[#823038] underline" href={`/dashboard/projects/${id}/edit`}>Editar concierto</Link>.
+        </p>
+      </div>
 
       <form action={handleCreateActivity} className="space-y-5 bg-[#FFE4F3] border border-[#F2B8CF] p-6 rounded-xl">
         <div>
