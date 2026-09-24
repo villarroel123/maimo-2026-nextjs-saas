@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --narabi-surface: #EEEEEE;
+    --narabi-surface: #FDFDFF;
     --narabi-primary: #823038;
     --narabi-ink: #0D1821;
     --narabi-line: rgb(130 48 56 / 0.28);
