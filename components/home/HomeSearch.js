@@ -24,11 +24,11 @@ function ResultGroup({ label, results }) {
 
   return (
     <section>
-      <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#823038]">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.13em] text-[#FDFDFF]">{label}</p>
       <div className="mt-3 space-y-2">
         {results.map((result) => (
           <Link
-            className="group flex items-center justify-between gap-4 border border-[#0D1821]/15 bg-white px-4 py-3 transition hover:border-[#823038] hover:bg-[#FFF7FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+            className="group flex items-center justify-between gap-4 rounded-3xl border border-[#0D1821]/15 bg-white px-4 py-3 transition hover:border-[#823038] hover:bg-[#FFF7FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
             href={result.href}
             key={result.key}
           >
@@ -76,12 +76,12 @@ export default function HomeSearch({ searchData }) {
   const resultCount = results.concerts.length + results.fanprojects.length + results.fanbases.length;
 
   return (
-    <section className="bg-[#EEEEEE] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <section className="bg-[#823038] px-4 py-8 sm:px-6 sm:py-17 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#823038]">Explorar Narabi</p>
-          <h2 className="mt-2 text-[#0D1821]">Encontrá lo que buscás</h2>
-          <p className="mt-2 text-sm leading-6 text-[#50606B]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#FDFDFF]">Explorar Narabi</p>
+          <h2 className="mt-2 text-[#FDFDFF]">Encontrá lo que buscás</h2>
+          <p className="mt-2 text-sm leading-6 text-[#FDFDFF]">
             Buscá conciertos, fanprojects o fanbases desde un solo lugar.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function HomeSearch({ searchData }) {
           </span>
           <input
             aria-describedby="home-search-status"
-            className="h-13 w-full border border-[#0D1821]/35 bg-white py-3 pl-11 pr-20 text-sm text-[#0D1821] outline-none transition placeholder:text-[#68747B] focus:border-[#823038] focus:ring-2 focus:ring-[#823038]/20"
+            className="h-13 w-full rounded-full border border-[#0D1821]/35 bg-white py-3 pl-11 pr-20 text-sm text-[#0D1821] outline-none transition placeholder:text-[#68747B] focus:border-[#823038] focus:ring-2 focus:ring-[#823038]/20"
             id="home-search"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Ej.: BTS, mosaico, ARMY..."
@@ -103,7 +103,7 @@ export default function HomeSearch({ searchData }) {
           {query ? (
             <button
               aria-label="Limpiar búsqueda"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-semibold text-[#823038] transition hover:text-[#0D1821] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-xs font-semibold text-[#823038] transition hover:bg-[#FFE4F3] hover:text-[#0D1821] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
               onClick={() => setQuery("")}
               type="button"
             >
@@ -112,7 +112,7 @@ export default function HomeSearch({ searchData }) {
           ) : null}
         </div>
 
-        <p className="mt-2 text-xs text-[#68747B]" id="home-search-status" role="status">
+        <p className="mt-2 text-xs text-[#FDFDFF]/70" id="home-search-status" role="status">
           {normalizedQuery
             ? `${resultCount} resultado${resultCount === 1 ? "" : "s"} encontrado${resultCount === 1 ? "" : "s"}.`
             : "Escribí para buscar en toda la comunidad."}
@@ -126,9 +126,9 @@ export default function HomeSearch({ searchData }) {
               <ResultGroup label="Fanbases" results={results.fanbases} />
             </div>
           ) : (
-            <div className="mt-6 border border-dashed border-[#823038]/40 bg-[#FFF7FB] px-6 py-8 text-center">
-              <p className="font-semibold text-[#0D1821]">No se encontraron coincidencias.</p>
-              <p className="mt-2 text-sm text-[#68747B]">Probá con otro nombre, grupo o fanproject.</p>
+            <div className="mt-6 rounded-3xl border border-dashed border-[#FDFDFF]/40 bg-[#FFF7FB] px-6 py-8 text-center">
+              <p className="font-semibold text-[#823038]">No se encontraron coincidencias.</p>
+              <p className="mt-2 text-sm text-[#0D1821]/70">Probá con otro nombre, grupo o fanproject.</p>
             </div>
           )
         ) : null}

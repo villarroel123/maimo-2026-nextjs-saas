@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Homemade_Apple } from "next/font/google";
+import { Homemade_Apple, Chiron_GoRound_TC } from "next/font/google";
 
 import Hero from "@/components/Hero";
 
@@ -20,6 +20,11 @@ const homemadeApple = Homemade_Apple({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-homemade-apple",
+});
+
+const chironGoRoundTC = Chiron_GoRound_TC({
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export default async function Home() {
@@ -58,7 +63,7 @@ export default async function Home() {
   };
 
   return (
-    <main className="relative min-h-screen">
+    <main className={`${chironGoRoundTC.className} relative min-h-screen`}>
       <Hero />
 
       <div className="relative h-[3em] w-full overflow-hidden bg-[#823038]">
@@ -68,11 +73,11 @@ export default async function Home() {
               key={i}
               className="flex h-full w-55 shrink-0 items-center justify-center"
             >
-              <span className="font-sans uppercase tracking-wide text-[#FFE4F3]">
+              <span className="uppercase tracking-wide text-[#FFE4F3]">
                 narabi
               </span>
 
-              <span className="ml-15 font-sans uppercase tracking-wide text-[#FFE4F3]">
+              <span className="ml-15 uppercase tracking-wide text-[#FFE4F3]">
                 ˚｡𖦹 ⋆｡°
               </span>
             </div>
@@ -98,7 +103,7 @@ export default async function Home() {
 
       {/* Cómo funciona */}
       <section className="w-full bg-[#FDFDFF] px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
-        <p className={`${homemadeApple.className} mx-auto  text-4xl text-[#823038] sm:text-5xl`}>
+        <p className={`${homemadeApple.className} mx-auto text-4xl text-[#823038] sm:text-5xl`}>
           Conoce mas sobre Narabi !
         </p>
 
@@ -167,15 +172,16 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <div className="bg-[#EEEEEE] w-screen">
-              <Image
-                src="/items/ondas_dos.png"
-                alt=""
-                width={1920}
-                height={120}
-                className="h-auto w-full"
-              />
-            </div>
+
+      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden rounded-t-3xl bg-[#823038]">
+        <Image
+          src="/items/ondas_dos.png"
+          alt=""
+          width={1920}
+          height={120}
+          className="h-auto w-full"
+        />
+      </div>
 
       <HomeSearch searchData={searchData} />
 
@@ -187,25 +193,25 @@ export default async function Home() {
               Próximos conciertos
             </p>
 
-            <h2 className="mt-3 text-5xl font-semibold text-[#FDFDFF]">
+            <h2 className="mt-3 text-5xl text-[#FDFDFF]">
               Conciertos disponibles !
             </h2>
           </div>
         </div>
 
         {projects.length === 0 ? (
-          <div className="border border-[#F2B8CF] bg-white/60 p-6 text-sm leading-6 text-[#8A5468]">
+          <div className="rounded-3xl border border-[#F2B8CF] bg-white/60 p-6 text-sm leading-6 text-[#8A5468]">
             No hay proyectos ni conciertos cargados.
           </div>
         ) : (
           <HorizontalSlider label="conciertos disponibles">
             {projects.map((project) => (
               <article
-                className="flex w-[86%] shrink-0 snap-start flex-col justify-between border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
+                className="flex w-[86%] shrink-0 snap-start flex-col justify-between rounded-3xl border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
                 key={project.id}
               >
                 <div>
-                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-[#EEEEEE]">
+                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-2xl bg-[#EEEEEE]">
                     <img
                       src={project.imagen || "/projects/placeholder.jpg"}
                       alt={project.Titulo}
@@ -213,14 +219,14 @@ export default async function Home() {
                     />
 
                     {project["Dia del concierto"] ? (
-                      <span className="absolute left-3 top-3 rounded-lg bg-white/90 px-3 py-1 text-xs font-semibold text-[#5C1F3A] shadow-sm">
+                      <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[#5C1F3A] shadow-sm">
                         {project["Dia del concierto"]}
                       </span>
                     ) : null}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="border border-[#F2B8CF] px-2 py-1 text-xs uppercase tracking-[0.12em] text-[#C0567A]">
+                    <span className="rounded-full border border-[#F2B8CF] px-2 py-1 text-xs uppercase tracking-[0.12em] text-[#C0567A]">
                       {project.Pais || "Global"}
                     </span>
                   </div>
@@ -245,47 +251,59 @@ export default async function Home() {
       </section>
 
       {/* Fanbases */}
-      <section className="w-full bg-[#0D1821] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            {/* Fanbases */}
+      <section className="w-full bg-[#FDFDFF] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-5xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#F2B8CF]">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#C0567A]">
             Comunidad Narabi
           </p>
-          <h2 className="mt-3 text-[#EEEEEE]">Fanbases</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#EEEEEE]/70">
+          <h2 className="mt-3 text-4xl text-[#823038] sm:text-5xl">Fanbases</h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#823038]/80">
             Conocé las comunidades que hacen posibles los fanprojects de cada grupo.
           </p>
 
           {fanbases.length === 0 ? (
-            <p className="mx-auto mt-8 max-w-xl rounded-2xl border border-[#EEEEEE]/20 px-5 py-4 text-sm text-[#EEEEEE]/75">
+            <p className="mx-auto mt-8 max-w-xl rounded-3xl border border-[#823038]/20 bg-white px-5 py-4 text-base text-[#823038]/80">
               Próximamente vas a poder conocer a las fanbases de la comunidad.
             </p>
           ) : (
             <>
               <div className="mx-auto mt-10 grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-10">
-                {fanbases.slice(0, 3).map((fanbase) => (
-                  <Link
-                    className="group flex flex-col items-center rounded-3xl px-4 py-3 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-[#F2B8CF] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0D1821]"
-                    href={`/fanbases/${fanbase.id}`}
-                    key={fanbase.id}
-                  >
-                    <span className="relative block size-28 overflow-hidden rounded-full border-2 border-[#EEEEEE]/70 bg-[#823038] shadow-[0_16px_30px_-16px_rgba(0,0,0,0.9)] transition duration-300 group-hover:scale-105 group-hover:border-[#F2B8CF] sm:size-32">
-                      <Image
-                        alt={`Imagen temporal de la fanbase de ${fanbase.kpopGroup}`}
-                        className="h-full w-full object-cover object-[78%_85%] grayscale transition duration-300 group-hover:scale-110 group-hover:grayscale-0"
-                        fill
-                        sizes="(min-width: 640px) 8rem, 7rem"
-                        src="/items/hero_one.jpg"
-                      />
-                    </span>
-                    <h3 className="mt-4 text-lg text-[#EEEEEE] transition group-hover:text-[#F2B8CF]">
-                      {fanbase.kpopGroup}
-                    </h3>
-                  </Link>
-                ))}
+                {fanbases.slice(0, 3).map((fanbase) => {
+                  const lightstickByGroup = {
+                    BTS: "/items/bts.png",
+                    BLACKPINK: "/items/blackpink_ls.png",
+                    SEVENTEEN: "/items/svt.png",
+                  };
+                  const lightstickSrc =
+                    lightstickByGroup[(fanbase.kpopGroup || "").toUpperCase()] ||
+                    "/items/hero_one.jpg";
+
+                  return (
+                    <Link
+                      className="group flex flex-col items-center rounded-3xl px-4 py-3 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-[#823038] focus-visible:ring-offset-4 focus-visible:ring-offset-[#FDFDFF]"
+                      href={`/fanbases/${fanbase.id}`}
+                      key={fanbase.id}
+                    >
+                      <span className="relative block h-32 w-28 transition duration-300 group-hover:scale-105 sm:h-36 sm:w-32">
+                        <Image
+                          alt={`Lightstick de ${fanbase.kpopGroup}`}
+                          className="object-contain"
+                          fill
+                          sizes="(min-width: 640px) 8rem, 7rem"
+                          src={lightstickSrc}
+                        />
+                      </span>
+                      <h3 className="mt-4 text-xl text-[#823038] transition group-hover:text-[#C0567A]">
+                        {fanbase.kpopGroup}
+                      </h3>
+                    </Link>
+                  );
+                })}
               </div>
 
               <Link
-                className="mt-9 inline-flex h-10 items-center justify-center rounded-full border border-[#EEEEEE]/70 px-5 text-sm font-semibold text-[#EEEEEE] transition hover:border-[#F2B8CF] hover:bg-[#F2B8CF] hover:text-[#0D1821]"
+                className="mt-9 inline-flex h-11 items-center justify-center rounded-full border border-[#823038] px-6 text-base font-semibold text-[#823038] transition hover:bg-[#823038] hover:text-white"
                 href="/fanbases"
               >
                 Ver más
