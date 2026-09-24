@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Homemade_Apple } from "next/font/google";
 
 import Hero from "@/components/Hero";
 
@@ -14,6 +15,12 @@ import { getFanbases } from "@/lib/fanbases/fanbases";
 import HorizontalSlider from "@/components/HorizontalSlider";
 
 export const dynamic = "force-dynamic";
+
+const homemadeApple = Homemade_Apple({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-homemade-apple",
+});
 
 export default async function Home() {
   const [projects, votingConcerts, fanbases] = await Promise.all([
@@ -89,10 +96,91 @@ export default async function Home() {
         }
       `}</style>
 
+      {/* Cómo funciona */}
+      <section className="w-full bg-[#FDFDFF] px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
+        <p className={`${homemadeApple.className} mx-auto  text-4xl text-[#823038] sm:text-5xl`}>
+          Conoce mas sobre Narabi !
+        </p>
+
+        <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-6">
+          <div className="flex flex-col items-center rounded-3xl bg-[#FFE4F3] px-6 py-8 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
+              📅
+            </span>
+
+            <h3 className="mt-5 text-sm uppercase tracking-[0.14em] text-[#0D1821]">
+              Organizá
+            </h3>
+
+            <p className="mt-3 text-sm leading-6 text-[#0D1821]/70">
+              Creá o sumate a fanprojects para tu próximo concierto y coordiná todo con la comunidad.
+            </p>
+
+            <Link
+              href="/about"
+              className="mt-6 inline-flex h-9 items-center justify-center rounded-full border border-[#0D1821]/20 bg-white px-4 text-xs font-semibold uppercase tracking-wide text-[#0D1821] transition hover:bg-[#0D1821] hover:text-white"
+            >
+              Conocé más
+            </Link>
+          </div>
+
+          <div className="flex flex-col items-center rounded-3xl bg-[#B4D4EE] px-6 py-8 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
+              💌
+            </span>
+
+            <h3 className="mt-5 text-sm uppercase tracking-[0.14em] text-[#0D1821]">
+              Votá
+            </h3>
+
+            <p className="mt-3 text-sm leading-6 text-[#0D1821]/70">
+              Elegí entre las propuestas de fanprojects y decidí junto a otros fans qué se hace realidad.
+            </p>
+
+            <Link
+              href="/about"
+              className="mt-6 inline-flex h-9 items-center justify-center rounded-full border border-[#0D1821]/20 bg-white px-4 text-xs font-semibold uppercase tracking-wide text-[#0D1821] transition hover:bg-[#0D1821] hover:text-white"
+            >
+              Conocé más
+            </Link>
+          </div>
+
+          <div className="flex flex-col items-center rounded-3xl bg-[#E1D8FD] px-6 py-8 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
+              🪄
+            </span>
+
+            <h3 className="mt-5 text-sm uppercase tracking-[0.14em] text-[#0D1821]">
+              Participá
+            </h3>
+
+            <p className="mt-3 text-sm leading-6 text-[#0D1821]/70">
+              Seguí el progreso, sumate a las actividades y disfrutá del resultado en el concierto.
+            </p>
+
+            <Link
+              href="/about"
+              className="mt-6 inline-flex h-9 items-center justify-center rounded-full border border-[#0D1821]/20 bg-white px-4 text-xs font-semibold uppercase tracking-wide text-[#0D1821] transition hover:bg-[#0D1821] hover:text-white"
+            >
+              Conocé más
+            </Link>
+          </div>
+        </div>
+      </section>
+      <div className="bg-[#EEEEEE] w-screen">
+              <Image
+                src="/items/ondas_dos.png"
+                alt=""
+                width={1920}
+                height={120}
+                className="h-auto w-full"
+              />
+            </div>
+
       <HomeSearch searchData={searchData} />
 
       {/* Próximos conciertos */}
-      <section className="w-full bg-gradient-to-r from-[#FF9FD6] to-[#FFD670] px-4 sm:px-6 sm:py-10 lg:px-8">
+      <section className="w-full bg-linear-to-r from-[#FF9FD6] to-[#FFD670] px-4 sm:px-6 sm:py-10 lg:px-8">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
@@ -137,7 +225,7 @@ export default async function Home() {
                     </span>
                   </div>
 
-                  <h3 className="mt-4 break-words text-xl font-semibold text-[#5C1F3A]">
+                  <h3 className="mt-4 wrap-break-word text-xl font-semibold text-[#5C1F3A]">
                     {project.Titulo}
                   </h3>
                 </div>
@@ -207,66 +295,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Votaciones */}
-      <section className="w-full bg-[#FDFDFF] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
-              Próximos conciertos
-            </p>
-
-            <h2 className="mt-3 text-2xl font-semibold tracking-normal text-[#5C1F3A]">
-              Votaciones para próximos conciertos
-            </h2>
-          </div>
-
-          {votingConcerts.length > 0 ? (
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
-              href="/votaciones"
-            >
-              Ver todas las votaciones
-            </Link>
-          ) : null}
-        </div>
-
-        {votingConcerts.length === 0 ? (
-          <div className="border border-[#F2B8CF] bg-white/60 p-6 text-sm leading-6 text-[#8A5468]">
-            No hay votaciones activas en este momento.
-          </div>
-        ) : (
-          <HorizontalSlider label="votaciones para próximos conciertos">
-            {votingConcerts.map((concert) => (
-              <article
-                className="w-[86%] shrink-0 snap-start border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
-                key={concert.id}
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#C0567A]">
-                  {concert.Pais || "Global"} ·{" "}
-                  {concert["Dia del concierto"] || "Fecha a confirmar"}
-                </p>
-
-                <h3 className="mt-3 break-words text-xl font-semibold text-[#5C1F3A]">
-                  {concert.Titulo}
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-[#8A5468]">
-                  {concert.candidates.length} fanproject
-                  {concert.candidates.length === 1 ? "" : "s"} propuesto
-                  {concert.candidates.length === 1 ? "" : "s"}.
-                </p>
-
-                <Link
-                  className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
-                  href="/votaciones"
-                >
-                  Ver y votar
-                </Link>
-              </article>
-            ))}
-          </HorizontalSlider>
-        )}
-      </section>
       <pre
         className="
           pointer-events-none

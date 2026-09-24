@@ -42,7 +42,7 @@ export default function HorizontalSlider({ children, label }) {
 
       <div
         aria-label={label}
-        className="flex items-start snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-px pb-4 pt-px [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex items-start snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-px pb-4 pt-px [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
         ref={sliderRef}
         role="region"
         tabIndex="0"

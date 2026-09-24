@@ -112,6 +112,7 @@ export default function Navbar({
 
   const links = [
     { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
     { href: "/votaciones", label: "Votaciones" },
     { href: "/fanbases", label: "Fanbases" },
     ...(user
