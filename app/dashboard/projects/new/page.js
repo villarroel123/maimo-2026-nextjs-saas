@@ -20,6 +20,7 @@ export default async function NewProjectPage() {
     "use server";
     await requireAdmin();
     const titulo = String(formData.get("titulo") || "").trim();
+    const grupo = String(formData.get("grupo") || "").trim();
     const pais = String(formData.get("pais") || "").trim();
     const fecha = String(formData.get("fecha") || "").trim();
     const ubicacion = String(formData.get("ubicacion") || "").trim();
@@ -27,11 +28,11 @@ export default async function NewProjectPage() {
     const venueManualName = String(formData.get("venueManualName") || "").trim();
     const imagen = String(formData.get("imagen") || "").trim();
 
-    if (!titulo || !pais || !fecha) {
-      throw new Error("Completá el título, país y fecha del concierto.");
+    if (!titulo || !grupo || !pais || !fecha) {
+      throw new Error("Completá el título, grupo, país y fecha del concierto.");
     }
 
-    const res = await createProject({ titulo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
+    const res = await createProject({ titulo, grupo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
     if (res.success) {
       redirect("/dashboard");
     }
@@ -60,6 +61,21 @@ export default async function NewProjectPage() {
             required 
             placeholder="Ej: STRAYCITY"
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="grupo">
+            Grupo de K-pop
+          </label>
+          <input
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+            id="grupo"
+            maxLength={80}
+            name="grupo"
+            placeholder="Ej: BTS"
+            required
+            type="text"
           />
         </div>
 

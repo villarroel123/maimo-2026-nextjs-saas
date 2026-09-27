@@ -48,8 +48,8 @@ function ResultGroup({ label, results }) {
   );
 }
 
-export default function HomeSearch({ searchData }) {
-  const [query, setQuery] = useState("");
+export default function HomeSearch({ initialQuery = "", searchData }) {
+  const [query, setQuery] = useState(initialQuery);
   const normalizedQuery = normalizeSearchValue(query.trim());
   const results = useMemo(() => {
     if (!normalizedQuery) {
@@ -76,7 +76,7 @@ export default function HomeSearch({ searchData }) {
   const resultCount = results.concerts.length + results.fanprojects.length + results.fanbases.length;
 
   return (
-    <section className="bg-[#823038] px-4 py-8 sm:px-6 sm:py-17 lg:px-8">
+    <section className="scroll-mt-24 bg-[#823038] px-4 py-8 sm:px-6 sm:py-17 lg:px-8" id="explorar">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#FDFDFF]">Explorar Narabi</p>

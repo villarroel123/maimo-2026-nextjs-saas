@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { logout } from "@/app/dashboard/actions";
+import { Suspense, useEffect, useState } from "react";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import HomeNavSearch from "@/components/home/HomeNavSearch";
 
 function isActivePath(pathname, href) {
   if (href === "/") {
@@ -51,50 +53,83 @@ function NavLink({
 
 function ProfileLink({
   avatarUrl,
+  compact = false,
   displayName,
+  homeStyle = false,
   isScrolled = false,
   onClick,
-  compact = false,
 }) {
   const initial = displayName.trim().charAt(0).toUpperCase() || "N";
 
   return (
     <Link
-      aria-label="Abrir Mi agenda"
-      className={`group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#FDFDFF]/40 bg-[#FDFDFF]/10 p-1.5 transition hover:border-[#FDFDFF] hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${
-        isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"
-      } ${compact ? "pr-1.5" : "pr-3"}`}
+      aria-label={`Abrir perfil de ${displayName}`}
+      className={homeStyle
+        ? `inline-flex size-9 shrink-0 items-center justify-center transition hover:opacity-75 focus-visible:rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`
+        : `group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#FDFDFF]/40 bg-[#FDFDFF]/10 p-1.5 transition hover:border-[#FDFDFF] hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"} ${compact ? "pr-1.5" : "pr-3"}`}
       href="/profile"
       onClick={onClick}
-      title="Mi agenda"
+      title={displayName}
     >
       {avatarUrl ? (
         <img
           alt=""
-          className="size-7 shrink-0 rounded-full border border-[#FDFDFF]/60 object-cover"
+          className={`${homeStyle ? "size-9" : "size-7 border border-[#FDFDFF]/60"} shrink-0 rounded-full object-cover`}
           referrerPolicy="no-referrer"
           src={avatarUrl}
         />
       ) : (
-        <span
-          aria-hidden="true"
-          className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FDFDFF] text-xs font-bold text-[#823038]"
-        >
-          {initial}
-        </span>
+        homeStyle ? (
+          <FontAwesomeIcon aria-hidden="true" className="size-6" icon={faUser} />
+        ) : (
+          <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FDFDFF] text-xs font-bold text-[#823038]">
+            {initial}
+          </span>
+        )
       )}
+      {!homeStyle && !compact ? (
+        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">{displayName}</span>
+      ) : null}
+    </Link>
+  );
+}
 
-      {compact ? null : (
-        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">
-          {displayName}
-        </span>
-      )}
+function DesktopLinks({ links, isScrolled, pathname }) {
+  return (
+    <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#EEEEEE]/25 bg-[#FDFDFF]/10 p-1 shadow-sm">
+      {links.map((link) => (
+        <NavLink
+          hasIndicator={link.hasIndicator}
+          href={link.href}
+          isScrolled={isScrolled}
+          key={link.href}
+          label={link.label}
+          pathname={pathname}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, user }) {
+  return user ? (
+    <ProfileLink
+      avatarUrl={avatarUrl}
+      displayName={displayName}
+      homeStyle={homeStyle}
+      isScrolled={isScrolled}
+    />
+  ) : (
+    <Link
+      className="inline-flex h-10 items-center justify-center rounded-full bg-[#FDFDFF] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#FDFDFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF]"
+      href="/login"
+    >
+      Iniciar sesión
     </Link>
   );
 }
 
 export default function Navbar({
-  actions,
   hasUnreadNotifications = false,
   profile,
   user,
@@ -148,10 +183,10 @@ export default function Navbar({
           : "border-[#823038] bg-[#823038]/95"
       }`}
     >
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-14 items-center justify-between gap-3 py-2">
+      <div className={`mx-auto w-full ${pathname === "/" ? "max-w-7xl px-6 sm:px-10 lg:px-14 xl:px-16" : "max-w-6xl px-4 sm:px-6 lg:px-8"}`}>
+        <div className={`flex min-h-14 items-center justify-between gap-3 py-2 ${pathname === "/" ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)_minmax(0,1fr)]" : ""}`}>
           <Link
-            className="group flex min-w-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038]"
+            className="group flex shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038]"
             href="/"
             onClick={closeMenu}
           >
@@ -173,61 +208,26 @@ export default function Navbar({
             </span>
           </Link>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex">
-            <div className="flex min-w-0 items-center gap-1 rounded-full border border-[#EEEEEE]/25 bg-[#FDFDFF]/10 p-1 shadow-sm">
-              {links.map((link) => (
-                <NavLink
-                  hasIndicator={link.hasIndicator}
-                  href={link.href}
-                  isScrolled={isScrolled}
-                  key={link.href}
-                  label={link.label}
-                  pathname={pathname}
-                />
-              ))}
+          {pathname === "/" ? (
+            <div className="hidden min-w-0 xl:block">
+              <Suspense fallback={null}>
+                <HomeNavSearch inputId="nav-home-search-desktop" isScrolled={isScrolled} placeholder="Buscar en Narabi..." />
+              </Suspense>
             </div>
-
-            <div className="flex min-w-0 items-center justify-end gap-2">
-              {actions}
-
-              {user ? (
-                <>
-                  <ProfileLink
-                    avatarUrl={avatarUrl}
-                    displayName={displayName}
-                    isScrolled={isScrolled}
-                  />
-
-                  <form action={logout}>
-                    <button
-                      className={`inline-flex h-10 items-center justify-center rounded-full border border-[#FDFDFF] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${
-                        isScrolled
-                          ? "text-[#823038]"
-                          : "text-[#FDFDFF]"
-                      }`}
-                      type="submit"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <Link
-                  className="inline-flex h-10 items-center justify-center rounded-full bg-[#FDFDFF] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#FDFDFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF]"
-                  href="/login"
-                >
-                  Iniciar sesión
-                </Link>
-              )}
+          ) : (
+            <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 xl:flex">
+              <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
+              <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} isScrolled={isScrolled} user={user} />
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             {user ? (
               <ProfileLink
                 avatarUrl={avatarUrl}
                 compact
                 displayName={displayName}
+                homeStyle={pathname === "/"}
                 isScrolled={isScrolled}
                 onClick={closeMenu}
               />
@@ -254,10 +254,19 @@ export default function Navbar({
               </span>
             </button>
           </div>
+
+          {pathname === "/" ? <span aria-hidden="true" className="hidden xl:block" /> : null}
         </div>
 
+        {pathname === "/" ? (
+          <div className="hidden items-center justify-between border-t border-[#EEEEEE]/25 py-1 xl:flex">
+            <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
+            <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} homeStyle isScrolled={isScrolled} user={user} />
+          </div>
+        ) : null}
+
         <div
-          className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 lg:hidden ${
+          className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 xl:hidden ${
             isOpen
               ? "grid-rows-[1fr] pb-4"
               : "grid-rows-[0fr] pb-0"
@@ -279,33 +288,15 @@ export default function Navbar({
               ))}
             </div>
 
-            <div className="mt-3 grid min-w-0 gap-3 border-t border-[#EEEEEE]/25 pt-3">
-              {actions}
+            {pathname === "/" ? (
+              <div className="mt-3 border-t border-[#EEEEEE]/25 pt-3">
+                <Suspense fallback={null}>
+                  <HomeNavSearch inputId="nav-home-search-mobile" isScrolled={isScrolled} />
+                </Suspense>
+              </div>
+            ) : null}
 
-              {user ? (
-                <ProfileLink
-                  avatarUrl={avatarUrl}
-                  displayName={displayName}
-                  isScrolled={isScrolled}
-                  onClick={closeMenu}
-                />
-              ) : null}
-            </div>
-
-            {user ? (
-              <form action={logout} className="mt-3">
-                <button
-                  className={`h-10 w-full rounded-full border border-[#EEEEEE] bg-transparent px-4 text-sm font-semibold transition hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-                    isScrolled
-                      ? "text-[#823038]"
-                      : "text-[#EEEEEE]"
-                  }`}
-                  type="submit"
-                >
-                  Cerrar sesión
-                </button>
-              </form>
-            ) : (
+            {!user ? (
               <Link
                 className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-[#EEEEEE] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#EEEEEE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE]"
                 href="/login"
@@ -313,7 +304,7 @@ export default function Navbar({
               >
                 Iniciar sesión
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

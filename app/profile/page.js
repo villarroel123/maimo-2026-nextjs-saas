@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { logout } from "@/app/dashboard/actions";
 import PersonalAgenda from "@/components/profile/PersonalAgenda";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getFavoriteAgendaForUser } from "@/lib/favorites/favorites";
@@ -75,6 +76,11 @@ export default async function ProfilePage() {
             <span className="mt-4 inline-flex rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold capitalize text-[#823038]">
               {profile?.user_type || "user"}
             </span>
+            <form action={logout} className="mt-5">
+              <button className="rounded-full border border-[#823038] bg-white px-4 py-2 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" type="submit">
+                Cerrar sesión
+              </button>
+            </form>
           </article>
 
           <article className="rounded-3xl border border-[#F2B8CF] bg-white p-6 shadow-[0_12px_30px_rgba(130,48,56,0.06)] sm:p-7">

@@ -25,6 +25,7 @@ export default async function EditProjectPage({ params }) {
     "use server";
     await requireAdmin();
     const titulo = String(formData.get("titulo") || "").trim();
+    const grupo = String(formData.get("grupo") || "").trim();
     const pais = String(formData.get("pais") || "").trim();
     const fecha = String(formData.get("fecha") || "").trim();
     const ubicacion = String(formData.get("ubicacion") || "").trim();
@@ -36,7 +37,7 @@ export default async function EditProjectPage({ params }) {
       throw new Error("Completá el título, país y fecha del concierto.");
     }
 
-    const res = await updateProject(id, { titulo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
+    const res = await updateProject(id, { titulo, grupo, pais, fecha, ubicacion, venuePlaceId, venueManualName, imagen });
     if (res.success) {
       if (res.changes.length > 0) {
         const updatedFields = res.changes.join(" y ");
@@ -80,6 +81,21 @@ export default async function EditProjectPage({ params }) {
             required 
             defaultValue={project.Titulo}
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#8A5468] mb-2" htmlFor="grupo">
+            Grupo de K-pop
+          </label>
+          <input
+            className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
+            defaultValue={project.Grupo || ""}
+            id="grupo"
+            maxLength={80}
+            name="grupo"
+            placeholder="Ej: BTS"
+            type="text"
           />
         </div>
 

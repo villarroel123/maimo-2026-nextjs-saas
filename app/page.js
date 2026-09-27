@@ -28,7 +28,9 @@ const chironGoRoundTC = Chiron_GoRound_TC({
   weight: "400",
 });
 
-export default async function Home() {
+export default async function Home({ searchParams }) {
+  const params = await searchParams;
+  const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
   const [projects, votingConcerts, fanbases] = await Promise.all([
     getProjectsWithFanProjects(),
     getFanProjectVotingConcerts(),
@@ -184,7 +186,7 @@ export default async function Home() {
         />
       </div>
 
-      <HomeSearch searchData={searchData} />
+      <HomeSearch initialQuery={query} key={query} searchData={searchData} />
 
       {/* Próximos conciertos */}
       <section className="w-full bg-linear-to-r from-[#FF9FD6] to-[#FFD670] px-4 sm:px-6 sm:py-10 lg:px-8">
@@ -213,10 +215,12 @@ export default async function Home() {
               >
                 <div>
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-2xl bg-[#EEEEEE]">
-                    <img
+                    <Image
                       src={getConcertImage(project)}
                       alt={project.Titulo}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 86vw"
+                      className="object-cover"
                     />
 
                     {project["Dia del concierto"] ? (

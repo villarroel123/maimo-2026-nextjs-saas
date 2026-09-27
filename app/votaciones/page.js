@@ -58,6 +58,53 @@ async function getConcertsWithComments(concerts) {
   );
 }
 
+function getConcertGroupName(concert) {
+  if (typeof concert.Grupo === "string" && concert.Grupo.trim()) {
+    return concert.Grupo.trim();
+  }
+
+  const fanbaseGroups = [...new Set(concert.candidates
+    .map((candidate) => typeof candidate.fanbaseKpopGroup === "string" ? candidate.fanbaseKpopGroup.trim() : "")
+    .filter(Boolean))];
+
+  const title = typeof concert.Titulo === "string" ? concert.Titulo.trim() : "";
+  return fanbaseGroups.length === 1 ? fanbaseGroups[0] : title || "Grupo por confirmar";
+}
+
+function groupConcerts(concerts) {
+  const groups = new Map();
+
+  for (const concert of concerts) {
+    const name = getConcertGroupName(concert);
+    const key = name.toLocaleLowerCase("es");
+    if (!groups.has(key)) groups.set(key, { name, concerts: [] });
+    groups.get(key).concerts.push(concert);
+  }
+
+  return [...groups.values()]
+    .sort((first, second) => first.name.localeCompare(second.name, "es"))
+    .map((group, index) => ({ ...group, anchor: `grupo-${index + 1}` }));
+}
+
+function normalizeSearchValue(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es");
+}
+
+function matchesConcertSearch(concert, query) {
+  const searchableValues = [
+    getConcertGroupName(concert),
+    concert.Titulo,
+    concert.Pais,
+    concert["Dia del concierto"],
+    ...concert.candidates.map((candidate) => candidate.titulo),
+  ];
+
+  return searchableValues.some((value) => normalizeSearchValue(value).includes(query));
+}
+
 function VotingComments({ comments, concert, user }) {
   const commentCount = comments.length;
   const anchorId = `comentarios-${concert.id}`;
@@ -189,9 +236,17 @@ function VotingReactionControls({ concert, user }) {
 
 export default async function VotingPage({ searchParams }) {
   const user = await getCurrentUser();
-  const status = (await searchParams)?.status;
+  const params = await searchParams;
+  const status = params?.status;
+  const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
   const votingConcerts = await getFanProjectVotingConcerts(user?.uid);
-  const concerts = await getConcertsWithComments(votingConcerts);
+  const normalizedQuery = normalizeSearchValue(query);
+  const matchingConcerts = normalizedQuery
+    ? votingConcerts.filter((concert) => matchesConcertSearch(concert, normalizedQuery))
+    : votingConcerts;
+  const concerts = await getConcertsWithComments(matchingConcerts);
+  const concertGroups = groupConcerts(concerts);
+  const totalGroups = groupConcerts(votingConcerts).length;
   const statusMessage = getStatusMessage(status);
 
   return (
@@ -212,11 +267,14 @@ export default async function VotingPage({ searchParams }) {
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm">
               <span className="rounded-full bg-[#5C1F3A] px-3 py-1.5 font-semibold text-white">
-                {concerts.length} votación{concerts.length === 1 ? " activa" : "es activas"}
+                {votingConcerts.length} votación{votingConcerts.length === 1 ? " activa" : "es activas"}
               </span>
               <span className="rounded-full border border-[#E9A8C2] bg-white/75 px-3 py-1.5 font-medium text-[#823038]">
                 1 voto por concierto
               </span>
+              {totalGroups ? <span className="rounded-full border border-[#E9A8C2] bg-white/75 px-3 py-1.5 font-medium text-[#823038]">
+                {totalGroups} grupo{totalGroups === 1 ? "" : "s"}
+              </span> : null}
             </div>
           </div>
         </div>
@@ -231,18 +289,43 @@ export default async function VotingPage({ searchParams }) {
           </div>
         ) : null}
 
-        <div className="mt-10 space-y-7">
+        {concertGroups.length > 1 ? (
+          <nav aria-label="Ir a las votaciones de un grupo" className="mt-8 flex flex-wrap items-center gap-2">
+            {concertGroups.map((group) => (
+              <a className="rounded-full border border-[#F2B8CF] bg-white px-3 py-1.5 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" href={`#${group.anchor}`} key={group.anchor}>
+                {group.name}
+              </a>
+            ))}
+          </nav>
+        ) : null}
+
+        <div className="mt-10 space-y-10">
           {concerts.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[#E9A8C2] bg-[#FFF7FB] px-6 py-12 text-center">
-              <p className="text-lg font-semibold text-[#5C1F3A]">No hay votaciones activas</p>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8A5468]">
-                Cuando se publiquen nuevas propuestas para un concierto, van a aparecer acá.
+              <p className="text-lg font-semibold text-[#5C1F3A]">
+                {votingConcerts.length ? `No encontramos votaciones para “${query}”` : "No hay votaciones activas"}
               </p>
-              <Link className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7A2A4D]" href="/">
-                Ver conciertos
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8A5468]">
+                {votingConcerts.length
+                  ? "Probá con el nombre del grupo, del concierto o de un fanproject."
+                  : "Cuando se publiquen nuevas propuestas para un concierto, van a aparecer acá."}
+              </p>
+              <Link className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7A2A4D]" href={votingConcerts.length ? "/votaciones" : "/"}>
+                {votingConcerts.length ? "Ver todas las votaciones" : "Ver conciertos"}
               </Link>
             </div>
-          ) : concerts.map((concert) => {
+          ) : concertGroups.map((group) => (
+            <section className="scroll-mt-24" id={group.anchor} key={group.anchor}>
+              <div className="mx-auto mb-5 flex w-full max-w-3xl flex-wrap items-end justify-between gap-3 border-b border-[#F2B8CF] pb-4">
+                <div>
+                  <h2 className="text-2xl font-semibold text-[#5C1F3A] sm:text-3xl">{group.name}</h2>
+                </div>
+                <span className="rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold text-[#823038]">
+                  {group.concerts.length} concierto{group.concerts.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="space-y-6">
+                {group.concerts.map((concert) => {
             const selectedFanProject = concert.candidates.find((candidate) => candidate.id === concert.userVote);
 
             return (
@@ -251,20 +334,22 @@ export default async function VotingPage({ searchParams }) {
                 className="mx-auto w-full max-w-3xl scroll-mt-6 overflow-hidden rounded-2xl border border-[#F2B8CF] bg-white shadow-[0_12px_28px_rgba(130,48,56,0.08)]"
                 key={concert.id}
               >
-                <div className="p-5 sm:p-6">
-                  <div className="flex items-start gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#823038] text-sm font-bold text-white">N</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-[#5C1F3A]">Narabi</p>
-                      <p className="mt-0.5 text-xs text-[#8A5468]">
-                        {concert.Pais || "Global"} · {concert["Dia del concierto"] || "Fecha a confirmar"}
-                      </p>
-                    </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F2B8CF] bg-[#FFF7FB] px-5 py-4 sm:px-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#C0567A]">Concierto de {group.name}</p>
+                    <h3 className="mt-1 text-xl font-semibold text-[#5C1F3A]">{concert.Titulo || group.name}</h3>
+                    <p className="mt-1 text-sm text-[#8A5468]">
+                      {concert.Pais || "Lugar a confirmar"} · {concert["Dia del concierto"] || "Fecha a confirmar"}
+                    </p>
                   </div>
-
-                  <h2 className="mt-5 text-xl font-semibold text-[#5C1F3A] sm:text-2xl">
-                    ¿Qué fanproject querés ver confirmado para {concert.Titulo}?
-                  </h2>
+                  <Link className="text-sm font-semibold text-[#823038] underline underline-offset-2 hover:text-[#5C1F3A]" href={`/projects/${concert.id}`}>
+                    Ver concierto
+                  </Link>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <h4 className="text-xl font-semibold text-[#5C1F3A] sm:text-2xl">
+                    ¿Qué fanproject querés ver confirmado para este concierto?
+                  </h4>
                   <p className="mt-2 text-xs font-semibold text-[#8A5468]">
                     {concert.totalVotes} {concert.totalVotes === 1 ? "voto" : "votos"} · {concert.candidates.length} propuesta{concert.candidates.length === 1 ? "" : "s"}
                   </p>
@@ -332,7 +417,10 @@ export default async function VotingPage({ searchParams }) {
                 <VotingComments comments={concert.comments} concert={concert} user={user} />
               </article>
             );
-          })}
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </section>
     </main>

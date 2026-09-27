@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { getProjectWithDetails } from "@/lib/projects/projects";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { getFanprojectImage } from "@/lib/projects/fanproject-image";
+import { getConcertIdeas } from "@/lib/comments/concert-ideas";
+import { getCurrentUser } from "@/lib/firebase/session";
+import { getCurrentUserProfile } from "@/lib/users/users";
+import ConcertIdeasSection from "@/components/projects/ConcertIdeasSection";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 import VenueInfo from "@/components/venues/VenueInfo";
 
@@ -10,7 +14,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectDetailPage({ params }) {
   const { id } = await params;
-  const project = await getProjectWithDetails(id);
+  const detailPath = `/projects/${id}`;
+  const currentUser = await getCurrentUser();
+  const [project, ideas, currentProfile] = await Promise.all([
+    getProjectWithDetails(id),
+    getConcertIdeas(id, currentUser?.uid),
+    currentUser ? getCurrentUserProfile(currentUser) : null,
+  ]);
 
   if (!project) {
     notFound();
@@ -92,6 +102,15 @@ export default async function ProjectDetailPage({ params }) {
           })
         )}
       </div>
+
+      <ConcertIdeasSection
+        currentUserName={currentProfile?.displayName || currentUser?.name || currentUser?.email?.split("@")[0]}
+        detailPath={detailPath}
+        initialIdeas={ideas}
+        isSignedIn={Boolean(currentUser)}
+        key={id}
+        projectId={id}
+      />
     </main>
   );
 }
