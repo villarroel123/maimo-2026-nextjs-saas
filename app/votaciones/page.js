@@ -1,8 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import ThumbIcon from "@/components/icons/ThumbIcon";
 import VotingCommentsToggle from "@/components/votes/VotingCommentsToggle";
 import { getVotingComments } from "@/lib/comments/voting-comments";
 import { getCurrentUser } from "@/lib/firebase/session";
+import { getConcertImage } from "@/lib/projects/concert-image";
 import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 import {
   addVotingComment,
@@ -194,16 +196,16 @@ function VotingComments({ comments, concert, user }) {
 function VotingReactionButton({ direction, projectId, user, userReaction }) {
   const label = direction === "like" ? "Me gusta" : "No me gusta";
   const isActive = userReaction === direction;
-  const className = `inline-flex size-10 items-center justify-center rounded-full text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
+  const className = `inline-flex size-7 items-center justify-center text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
     isActive
-      ? "bg-transparent text-[#0D1821]"
-      : "bg-transparent text-[#823038] hover:bg-[#FFF7FB] hover:text-[#0D1821]"
+      ? "text-[#FF9FD6]"
+      : "text-white hover:text-[#FF9FD6]"
   }`;
 
   if (!user) {
     return (
       <Link aria-label={label} className={className} href="/login?next=/votaciones" title={label}>
-        <ThumbIcon className="size-4" direction={direction === "dislike" ? "down" : "up"} />
+        <ThumbIcon className="size-5" direction={direction === "dislike" ? "down" : "up"} />
       </Link>
     );
   }
@@ -212,7 +214,7 @@ function VotingReactionButton({ direction, projectId, user, userReaction }) {
     <form action={toggleVotingReaction}>
       <input name="projectId" type="hidden" value={projectId} />
       <button aria-label={label} className={className} name="reaction" title={label} type="submit" value={direction}>
-        <ThumbIcon className="size-4" direction={direction === "dislike" ? "down" : "up"} />
+        <ThumbIcon className="size-5" direction={direction === "dislike" ? "down" : "up"} />
         <span className="sr-only">{label}</span>
       </button>
     </form>
@@ -223,13 +225,13 @@ function VotingReactionControls({ concert, user }) {
   const commentCount = concert.comments.length;
 
   return (
-    <div className="flex items-center gap-1 border-t border-[#FCE7F0] px-5 py-3 sm:px-7">
+    <div className="mt-auto flex items-center gap-2 pt-5">
       <VotingReactionButton direction="like" projectId={concert.id} user={user} userReaction={concert.userReaction} />
-      {concert.reactionCounts?.like ? <span className="-ml-1 text-xs font-semibold text-[#8A5468]">{concert.reactionCounts.like}</span> : null}
+      {concert.reactionCounts?.like ? <span className="mr-2 text-xs font-semibold text-white/80">{concert.reactionCounts.like}</span> : null}
       <VotingReactionButton direction="dislike" projectId={concert.id} user={user} userReaction={concert.userReaction} />
-      {concert.reactionCounts?.dislike ? <span className="-ml-1 text-xs font-semibold text-[#8A5468]">{concert.reactionCounts.dislike}</span> : null}
+      {concert.reactionCounts?.dislike ? <span className="mr-2 text-xs font-semibold text-white/80">{concert.reactionCounts.dislike}</span> : null}
       <VotingCommentsToggle commentCount={commentCount} panelId={`comentarios-${concert.id}`} />
-      {commentCount ? <span className="-ml-1 text-xs font-semibold text-[#8A5468]">{commentCount}</span> : null}
+      {commentCount ? <span className="text-xs font-semibold text-white/80">{commentCount}</span> : null}
     </div>
   );
 }
@@ -246,37 +248,21 @@ export default async function VotingPage({ searchParams }) {
     : votingConcerts;
   const concerts = await getConcertsWithComments(matchingConcerts);
   const concertGroups = groupConcerts(concerts);
-  const totalGroups = groupConcerts(votingConcerts).length;
   const statusMessage = getStatusMessage(status);
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-[#F2B8CF] bg-[#FFE4F3] px-6 py-8 sm:px-10 sm:py-10">
-          <div className="absolute -right-12 -top-16 size-48 rounded-full bg-white/45" />
-          <div className="absolute -bottom-24 left-1/3 size-40 rounded-full border-[18px] border-[#F6BDD5]/55" />
-          <div className="relative max-w-3xl">
-            <p className="inline-flex rounded-full border border-[#E9A8C2] bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#A63D65]">
-              Participación de la comunidad
-            </p>
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#5C1F3A] sm:text-5xl">
-              Elegí el próximo fanproject
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#7A5364] sm:text-base">
-              Cada cuenta tiene un voto por concierto. Elegí tu propuesta favorita y acompañá las ideas de la comunidad.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3 text-sm">
-              <span className="rounded-full bg-[#5C1F3A] px-3 py-1.5 font-semibold text-white">
-                {votingConcerts.length} votación{votingConcerts.length === 1 ? " activa" : "es activas"}
-              </span>
-              <span className="rounded-full border border-[#E9A8C2] bg-white/75 px-3 py-1.5 font-medium text-[#823038]">
-                1 voto por concierto
-              </span>
-              {totalGroups ? <span className="rounded-full border border-[#E9A8C2] bg-white/75 px-3 py-1.5 font-medium text-[#823038]">
-                {totalGroups} grupo{totalGroups === 1 ? "" : "s"}
-              </span> : null}
-            </div>
-          </div>
+        <div className="mx-auto max-w-5xl">
+          <h1 className="text-4xl font-semibold tracking-tight text-[#5C1F3A] sm:text-5xl">
+            Elegí el próximo fanproject
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-[#7A5364] sm:text-base">
+            Cada cuenta tiene un voto por concierto. Elegí tu propuesta favorita y acompañá las ideas de la comunidad.
+          </p>
+          <p className="mt-5 text-sm font-medium text-[#823038]">
+            {votingConcerts.length} votación{votingConcerts.length === 1 ? " activa" : "es activas"} · 1 voto por concierto
+          </p>
         </div>
 
         {statusMessage ? (
@@ -287,16 +273,6 @@ export default async function VotingPage({ searchParams }) {
           }`}>
             {statusMessage}
           </div>
-        ) : null}
-
-        {concertGroups.length > 1 ? (
-          <nav aria-label="Ir a las votaciones de un grupo" className="mt-8 flex flex-wrap items-center gap-2">
-            {concertGroups.map((group) => (
-              <a className="rounded-full border border-[#F2B8CF] bg-white px-3 py-1.5 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" href={`#${group.anchor}`} key={group.anchor}>
-                {group.name}
-              </a>
-            ))}
-          </nav>
         ) : null}
 
         <div className="mt-10 space-y-10">
@@ -316,76 +292,64 @@ export default async function VotingPage({ searchParams }) {
             </div>
           ) : concertGroups.map((group) => (
             <section className="scroll-mt-24" id={group.anchor} key={group.anchor}>
-              <div className="mx-auto mb-5 flex w-full max-w-3xl flex-wrap items-end justify-between gap-3 border-b border-[#F2B8CF] pb-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-[#5C1F3A] sm:text-3xl">{group.name}</h2>
-                </div>
-                <span className="rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold text-[#823038]">
-                  {group.concerts.length} concierto{group.concerts.length === 1 ? "" : "s"}
-                </span>
+              <div className="mx-auto mb-5 w-full max-w-5xl">
+                <h2 className="text-2xl font-semibold text-[#5C1F3A] sm:text-3xl">{group.name}</h2>
               </div>
               <div className="space-y-6">
                 {group.concerts.map((concert) => {
             const selectedFanProject = concert.candidates.find((candidate) => candidate.id === concert.userVote);
+            const concertImage = getConcertImage(concert);
 
             return (
               <article
                 id={`votacion-${concert.id}`}
-                className="mx-auto w-full max-w-3xl scroll-mt-6 overflow-hidden rounded-2xl border border-[#F2B8CF] bg-white shadow-[0_12px_28px_rgba(130,48,56,0.08)]"
+                className="mx-auto w-full max-w-5xl scroll-mt-6 overflow-hidden rounded-2xl bg-[#823038] text-white shadow-[0_16px_36px_rgba(92,31,58,0.16)]"
                 key={concert.id}
               >
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F2B8CF] bg-[#FFF7FB] px-5 py-4 sm:px-6">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#C0567A]">Concierto de {group.name}</p>
-                    <h3 className="mt-1 text-xl font-semibold text-[#5C1F3A]">{concert.Titulo || group.name}</h3>
-                    <p className="mt-1 text-sm text-[#8A5468]">
+                <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,35%)] lg:gap-8">
+                  <div className="flex min-w-0 flex-col">
+                    <p className="text-sm font-medium text-white/80">Concierto de {group.name}</p>
+                    <h3 className="mt-1 text-2xl font-semibold leading-tight sm:text-3xl">Elegí un fanproject</h3>
+                    <p className="mt-2 text-sm text-white/75">
+                      {typeof concert.Titulo === "string" && concert.Titulo.toLocaleLowerCase("es") !== group.name.toLocaleLowerCase("es") ? `${concert.Titulo} · ` : ""}
                       {concert.Pais || "Lugar a confirmar"} · {concert["Dia del concierto"] || "Fecha a confirmar"}
                     </p>
-                  </div>
-                  <Link className="text-sm font-semibold text-[#823038] underline underline-offset-2 hover:text-[#5C1F3A]" href={`/projects/${concert.id}`}>
-                    Ver concierto
-                  </Link>
-                </div>
-                <div className="p-5 sm:p-6">
-                  <h4 className="text-xl font-semibold text-[#5C1F3A] sm:text-2xl">
-                    ¿Qué fanproject querés ver confirmado para este concierto?
-                  </h4>
-                  <p className="mt-2 text-xs font-semibold text-[#8A5468]">
-                    {concert.totalVotes} {concert.totalVotes === 1 ? "voto" : "votos"} · {concert.candidates.length} propuesta{concert.candidates.length === 1 ? "" : "s"}
-                  </p>
+                    <p className="mt-3 text-sm font-semibold text-white/90">
+                      {concert.totalVotes} {concert.totalVotes === 1 ? "voto" : "votos"} · {concert.candidates.length} propuesta{concert.candidates.length === 1 ? "" : "s"}
+                    </p>
 
                   {!user ? (
-                    <div className="mt-5">
+                    <div className="mt-6">
                       <div className="space-y-2">
                         {concert.candidates.map((candidate) => (
-                          <div className="rounded-lg border border-[#F2B8CF] bg-[#FFF7FB] px-4 py-3 text-sm font-medium text-[#5C1F3A]" key={candidate.id}>
+                          <div className="rounded-lg bg-white/90 px-4 py-3 text-sm font-semibold text-[#5C1F3A]" key={candidate.id}>
                             {candidate.titulo}
                           </div>
                         ))}
                       </div>
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#FFE4F3] p-3.5">
-                        <p className="text-sm text-[#8A5468]">Iniciá sesión para elegir una propuesta.</p>
-                        <Link className="rounded-full bg-[#823038] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5C1F3A]" href="/login?next=/votaciones">
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-white/85">Iniciá sesión para elegir una propuesta.</p>
+                        <Link className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" href="/login?next=/votaciones">
                           Iniciar sesión
                         </Link>
                       </div>
                     </div>
                   ) : selectedFanProject ? (
-                    <div className="mt-5">
-                      <div className="rounded-xl border border-[#B7DFC5] bg-[#E9F8EE] px-3.5 py-3 text-sm font-semibold text-[#287142]">
+                    <div className="mt-6">
+                      <p className="mb-3 text-sm font-semibold text-white/90">
                         Votaste por {selectedFanProject.titulo}. Estos son los resultados actuales.
-                      </div>
-                      <div className="mt-3 space-y-2">
+                      </p>
+                      <div className="space-y-2">
                         {concert.candidates.map((candidate) => {
                           const percentage = concert.totalVotes ? Math.round((candidate.votes / concert.totalVotes) * 100) : 0;
                           const isSelected = candidate.id === selectedFanProject.id;
 
                           return (
-                            <div className={`relative overflow-hidden rounded-lg border px-4 py-3 ${isSelected ? "border-[#C9819C] bg-[#FFF7FB]" : "border-[#F2B8CF] bg-white"}`} key={candidate.id}>
-                              <div className="absolute inset-y-0 left-0 bg-[#FFE4F3] transition-all" style={{ width: `${percentage}%` }} />
+                            <div className={`relative overflow-hidden rounded-lg px-4 py-3 ${isSelected ? "bg-white" : "bg-white/90"}`} key={candidate.id}>
+                              <div className="absolute inset-y-0 left-0 bg-[#F5C6D8] transition-all" style={{ width: `${percentage}%` }} />
                               <div className="relative flex items-center justify-between gap-3 text-sm">
                                 <span className="font-semibold text-[#5C1F3A]">{candidate.titulo}</span>
-                                <span className="shrink-0 font-medium text-[#8A5468]">{percentage}%</span>
+                                <span className="shrink-0 font-semibold text-[#5C1F3A]">{percentage}%</span>
                               </div>
                             </div>
                           );
@@ -393,27 +357,58 @@ export default async function VotingPage({ searchParams }) {
                       </div>
                     </div>
                   ) : (
-                    <form action={castFanProjectVote} className="mt-5">
+                    <form action={castFanProjectVote} className="mt-6">
                       <input name="projectId" type="hidden" value={concert.id} />
                       <fieldset>
                         <legend className="sr-only">Elegí tu propuesta favorita</legend>
                         <div className="space-y-2">
                           {concert.candidates.map((candidate) => (
-                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-[#F2B8CF] bg-white px-4 py-3 text-sm font-medium text-[#5C1F3A] transition hover:border-[#C9819C] hover:bg-[#FFF7FB]" key={candidate.id}>
+                            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg bg-white/90 px-4 py-3 text-sm font-semibold text-[#5C1F3A] transition hover:bg-white" key={candidate.id}>
                                 <span>{candidate.titulo}</span>
                                 <input className="size-4 shrink-0 accent-[#823038]" name="fanprojectId" required type="radio" value={candidate.id} />
                             </label>
                           ))}
                         </div>
                       </fieldset>
-                      <button className="mt-4 rounded-full bg-[#823038] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]" type="submit">
+                      <button className="mt-4 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" type="submit">
                         Confirmar voto
                       </button>
                     </form>
                   )}
+
+                    <VotingReactionControls concert={concert} user={user} />
+                  </div>
+
+                  <div className="order-first lg:order-last">
+                    <Link
+                      aria-label={`Ver concierto de ${group.name}`}
+                      className="group relative block aspect-square w-full overflow-hidden rounded-xl bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                      href={`/projects/${concert.id}`}
+                    >
+                      <Image
+                        alt=""
+                        aria-hidden="true"
+                        className="scale-110 object-cover opacity-60 blur-lg"
+                        fill
+                        sizes="(min-width: 1024px) 35vw, 100vw"
+                        src={concertImage}
+                        unoptimized={/^https?:\/\//i.test(concertImage)}
+                      />
+                      <Image
+                        alt={`Concierto de ${group.name}`}
+                        className="object-contain"
+                        fill
+                        sizes="(min-width: 1024px) 35vw, 100vw"
+                        src={concertImage}
+                        unoptimized={/^https?:\/\//i.test(concertImage)}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-[#0D1821]/40 p-4 opacity-100 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                        <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#823038] shadow-sm">Ver concierto</span>
+                      </span>
+                    </Link>
+                  </div>
                 </div>
 
-                <VotingReactionControls concert={concert} user={user} />
                 <VotingComments comments={concert.comments} concert={concert} user={user} />
               </article>
             );

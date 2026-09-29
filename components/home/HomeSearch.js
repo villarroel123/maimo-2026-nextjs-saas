@@ -62,10 +62,10 @@ export default function HomeSearch({ initialQuery = "", searchData }) {
 
     return {
       concerts: searchData.concerts
-        .filter((concert) => matches([concert.title, concert.country, concert.date]))
+        .filter((concert) => matches([concert.title, concert.artist, concert.country, concert.date]))
         .slice(0, 4),
       fanprojects: searchData.fanprojects
-        .filter((fanproject) => matches([fanproject.title, fanproject.description, fanproject.concertTitle]))
+        .filter((fanproject) => matches([fanproject.title, fanproject.description, fanproject.concertTitle, fanproject.artist]))
         .slice(0, 4),
       fanbases: searchData.fanbases
         .filter((fanbase) => matches([fanbase.name, fanbase.kpopGroup]))

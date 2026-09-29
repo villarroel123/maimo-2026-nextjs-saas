@@ -2,11 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { faMagnifyingGlass, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import HomeNavSearch from "@/components/home/HomeNavSearch";
 
 function isActivePath(pathname, href) {
   if (href === "/") {
@@ -72,11 +71,14 @@ function ProfileLink({
       title={displayName}
     >
       {avatarUrl ? (
-        <img
+        <Image
           alt=""
           className={`${homeStyle ? "size-9" : "size-7 border border-[#FDFDFF]/60"} shrink-0 rounded-full object-cover`}
+          height={36}
           referrerPolicy="no-referrer"
           src={avatarUrl}
+          unoptimized
+          width={36}
         />
       ) : (
         homeStyle ? (
@@ -111,18 +113,34 @@ function DesktopLinks({ links, isScrolled, pathname }) {
   );
 }
 
-function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, user }) {
+function SearchButton({ isScrolled, onClick }) {
+  return (
+    <button
+      aria-label="Abrir búsqueda"
+      className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-[#FDFDFF]/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`}
+      onClick={onClick}
+      title="Buscar"
+      type="button"
+    >
+      <FontAwesomeIcon aria-hidden="true" className="size-5" icon={faMagnifyingGlass} />
+    </button>
+  );
+}
+
+function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, onClick, user }) {
   return user ? (
     <ProfileLink
       avatarUrl={avatarUrl}
       displayName={displayName}
       homeStyle={homeStyle}
       isScrolled={isScrolled}
+      onClick={onClick}
     />
   ) : (
     <Link
       className="inline-flex h-10 items-center justify-center rounded-full bg-[#FDFDFF] px-4 text-sm font-semibold text-[#823038] shadow-sm transition hover:bg-[#0D1821] hover:text-[#FDFDFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF]"
       href="/login"
+      onClick={onClick}
     >
       Iniciar sesión
     </Link>
@@ -135,9 +153,14 @@ export default function Navbar({
   user,
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openMenuForPath, setOpenMenuForPath] = useState(null);
+  const [openSearchForPath, setOpenSearchForPath] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const isOpen = openMenuForPath === pathname;
+  const isSearchOpen = openSearchForPath === pathname;
+  const isOpen = !isSearchOpen && openMenuForPath === pathname;
   const displayName =
     profile?.displayName ||
     user?.name ||
@@ -171,8 +194,29 @@ export default function Navbar({
     return () => window.removeEventListener("scroll", updateScrollState);
   }, []);
 
+  useEffect(() => {
+    if (isSearchOpen) searchInputRef.current?.focus();
+  }, [isSearchOpen]);
+
   function closeMenu() {
     setOpenMenuForPath(null);
+  }
+
+  function openSearch() {
+    setSearchQuery(pathname === "/" ? new URLSearchParams(window.location.search).get("q") || "" : "");
+    closeMenu();
+    setOpenSearchForPath(pathname);
+  }
+
+  function closeSearch() {
+    setOpenSearchForPath(null);
+  }
+
+  function submitSearch(event) {
+    event.preventDefault();
+    const query = searchQuery.trim().slice(0, 100);
+    closeSearch();
+    router.push(query ? `/?q=${encodeURIComponent(query)}#explorar` : "/#explorar");
   }
 
   return (
@@ -184,11 +228,11 @@ export default function Navbar({
       }`}
     >
       <div className={`mx-auto w-full ${pathname === "/" ? "max-w-7xl px-6 sm:px-10 lg:px-14 xl:px-16" : "max-w-6xl px-4 sm:px-6 lg:px-8"}`}>
-        <div className={`flex min-h-14 items-center justify-between gap-3 py-2 ${pathname === "/" ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)_minmax(0,1fr)]" : ""}`}>
+        <div className="flex min-h-14 items-center justify-between gap-3 py-2">
           <Link
-            className="group flex shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038]"
+            className={`group shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038] ${isSearchOpen ? "hidden xl:flex" : "flex"}`}
             href="/"
-            onClick={closeMenu}
+            onClick={() => { closeMenu(); closeSearch(); }}
           >
             <Image
               alt="Narabi"
@@ -208,62 +252,91 @@ export default function Navbar({
             </span>
           </Link>
 
-          {pathname === "/" ? (
-            <div className="hidden min-w-0 xl:block">
-              <Suspense fallback={null}>
-                <HomeNavSearch inputId="nav-home-search-desktop" isScrolled={isScrolled} placeholder="Buscar en Narabi..." />
-              </Suspense>
-            </div>
-          ) : (
-            <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 xl:flex">
-              <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
-              <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} isScrolled={isScrolled} user={user} />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 xl:hidden">
-            {user ? (
-              <ProfileLink
-                avatarUrl={avatarUrl}
-                compact
-                displayName={displayName}
-                homeStyle={pathname === "/"}
-                isScrolled={isScrolled}
-                onClick={closeMenu}
-              />
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+            {!isSearchOpen ? (
+              <div className="hidden xl:flex">
+                <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
+              </div>
             ) : null}
 
-            <button
-              aria-controls="mobile-menu"
-              aria-expanded={isOpen}
-              aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-              className={`grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
-                isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
-              }`}
-              onClick={() =>
-                setOpenMenuForPath((value) =>
-                  value === pathname ? null : pathname,
-                )
-              }
-              type="button"
-            >
-              <span className="grid gap-1.5" aria-hidden="true">
-                <span className="block h-0.5 w-5 bg-current" />
-                <span className="block h-0.5 w-5 bg-current" />
-                <span className="block h-0.5 w-5 bg-current" />
-              </span>
-            </button>
+            {isSearchOpen ? (
+              <form
+                className="flex min-w-0 flex-1 items-center gap-2"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeSearch();
+                  }
+                }}
+                onSubmit={submitSearch}
+                role="search"
+              >
+                <label className="sr-only" htmlFor="navbar-search">Buscar en Narabi</label>
+                <div className={`flex min-w-0 flex-1 items-center rounded-full border bg-[#FDFDFF]/10 focus-within:ring-2 ${isScrolled ? "border-[#823038]/35 text-[#823038] focus-within:ring-[#823038]/30" : "border-[#FDFDFF]/50 text-[#FDFDFF] focus-within:ring-[#FDFDFF]/35"}`}>
+                  <input
+                    autoComplete="off"
+                    className={`h-10 min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${isScrolled ? "placeholder:text-[#823038]/60" : "placeholder:text-[#FDFDFF]/70"}`}
+                    id="navbar-search"
+                    maxLength={100}
+                    name="q"
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Buscar conciertos, fanprojects o fanbases"
+                    ref={searchInputRef}
+                    type="search"
+                    value={searchQuery}
+                  />
+                  <button aria-label="Buscar" className="grid size-9 shrink-0 place-items-center rounded-full transition hover:bg-[#FDFDFF]/15" type="submit">
+                    <FontAwesomeIcon aria-hidden="true" className="size-5" icon={faMagnifyingGlass} />
+                  </button>
+                </div>
+                <button aria-label="Cerrar búsqueda" className={`grid size-9 shrink-0 place-items-center rounded-full text-xl transition hover:bg-[#FDFDFF]/15 ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`} onClick={closeSearch} type="button">×</button>
+              </form>
+            ) : (
+              <SearchButton isScrolled={isScrolled} onClick={openSearch} />
+            )}
+
+            <div className="hidden shrink-0 xl:flex">
+              <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} homeStyle={pathname === "/"} isScrolled={isScrolled} onClick={closeSearch} user={user} />
+            </div>
+
+            {!isSearchOpen ? (
+              <div className="flex items-center gap-2 xl:hidden">
+                {user ? (
+                  <ProfileLink
+                    avatarUrl={avatarUrl}
+                    compact
+                    displayName={displayName}
+                    homeStyle={pathname === "/"}
+                    isScrolled={isScrolled}
+                    onClick={closeMenu}
+                  />
+                ) : null}
+
+                <button
+                  aria-controls="mobile-menu"
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+                  className={`grid size-10 place-items-center rounded-full border border-[#EEEEEE]/50 bg-transparent transition hover:border-[#EEEEEE] hover:bg-[#EEEEEE] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EEEEEE] ${
+                    isScrolled ? "text-[#823038]" : "text-[#EEEEEE]"
+                  }`}
+                  onClick={() =>
+                    setOpenMenuForPath((value) =>
+                      value === pathname ? null : pathname,
+                    )
+                  }
+                  type="button"
+                >
+                  <span className="grid gap-1.5" aria-hidden="true">
+                    <span className="block h-0.5 w-5 bg-current" />
+                    <span className="block h-0.5 w-5 bg-current" />
+                    <span className="block h-0.5 w-5 bg-current" />
+                  </span>
+                </button>
+              </div>
+            ) : null}
           </div>
 
-          {pathname === "/" ? <span aria-hidden="true" className="hidden xl:block" /> : null}
         </div>
-
-        {pathname === "/" ? (
-          <div className="hidden items-center justify-between border-t border-[#EEEEEE]/25 py-1 xl:flex">
-            <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
-            <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} homeStyle isScrolled={isScrolled} user={user} />
-          </div>
-        ) : null}
 
         <div
           className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 xl:hidden ${
@@ -287,14 +360,6 @@ export default function Navbar({
                 />
               ))}
             </div>
-
-            {pathname === "/" ? (
-              <div className="mt-3 border-t border-[#EEEEEE]/25 pt-3">
-                <Suspense fallback={null}>
-                  <HomeNavSearch inputId="nav-home-search-mobile" isScrolled={isScrolled} />
-                </Suspense>
-              </div>
-            ) : null}
 
             {!user ? (
               <Link

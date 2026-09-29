@@ -29,15 +29,14 @@ export default function VotingCommentsToggle({ commentCount, panelId }) {
   return (
     <button
       aria-controls={panelId}
-      aria-label="Abrir comentarios"
-      className={`ml-1 inline-flex size-10 items-center justify-center rounded-full transition hover:bg-[#FFF7FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038] ${
-        isOpen ? "text-[#0D1821]" : "text-[#823038] hover:text-[#0D1821]"
-      }`}
+      aria-expanded={isOpen}
+      aria-label={isOpen ? "Cerrar comentarios" : "Abrir comentarios"}
+      className="inline-flex size-7 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       onClick={toggleComments}
-      title="Abrir comentarios"
+      title={isOpen ? "Cerrar comentarios" : "Abrir comentarios"}
       type="button"
     >
-      <CommentIcon className="size-4" />
+      <CommentIcon color={isOpen ? "#FF9FD6" : "#FFFFFF"} />
       {commentCount ? <span className="sr-only">{commentCount} comentarios</span> : null}
     </button>
   );

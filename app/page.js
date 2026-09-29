@@ -28,6 +28,19 @@ const chironGoRoundTC = Chiron_GoRound_TC({
   weight: "400",
 });
 
+function getConcertArtist(project) {
+  const group = typeof project.Grupo === "string" ? project.Grupo.trim() : "";
+  if (group) return group;
+
+  const fanbaseGroups = [...new Set((project.subitems || [])
+    .map((fanproject) => typeof fanproject.fanbaseKpopGroup === "string" ? fanproject.fanbaseKpopGroup.trim() : "")
+    .filter(Boolean))];
+  if (fanbaseGroups.length === 1) return fanbaseGroups[0];
+
+  // Los conciertos antiguos no siempre tienen el campo Grupo cargado.
+  return project.Titulo?.trim().toUpperCase() === "ARIRANG" ? "BTS" : "";
+}
+
 export default async function Home({ searchParams }) {
   const params = await searchParams;
   const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
@@ -36,23 +49,28 @@ export default async function Home({ searchParams }) {
     getFanProjectVotingConcerts(),
     getFanbases(),
   ]);
+  const concertsByArtist = projects.map((project) => ({ project, artist: getConcertArtist(project) }));
   const searchData = {
-    concerts: projects.map((project) => ({
+    concerts: concertsByArtist.map(({ project, artist }) => ({
       key: `concert-${project.id}`,
       href: `/projects/${project.id}`,
       title: project.Titulo || "Concierto sin nombre",
+      artist,
       country: project.Pais || "",
       date: project["Dia del concierto"] || "",
-      subtitle: [project.Pais, project["Dia del concierto"]].filter(Boolean).join(" · "),
+      subtitle: [artist, project.Pais, project["Dia del concierto"]].filter(Boolean).join(" · "),
     })),
-    fanprojects: projects.flatMap((project) => (
+    fanprojects: concertsByArtist.flatMap(({ project, artist }) => (
       (project.subitems || []).map((fanproject) => ({
         key: `fanproject-${project.id}-${fanproject.id}`,
         href: `/projects/${project.id}/activities/${fanproject.id}`,
         title: fanproject.titulo || "Fanproject sin título",
         description: fanproject.descripcion || "",
+        artist,
         concertTitle: project.Titulo || "Concierto",
-        subtitle: project.Titulo || "Concierto",
+        subtitle: artist && artist.toLocaleLowerCase("es-AR") !== project.Titulo?.toLocaleLowerCase("es-AR")
+          ? `${artist} · ${project.Titulo || "Concierto"}`
+          : project.Titulo || "Concierto",
       }))
     )),
     fanbases: fanbases.map((fanbase) => ({
