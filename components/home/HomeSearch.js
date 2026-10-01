@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Reveal from "@/components/Reveal";
 import { useMemo, useState } from "react";
 
 function normalizeSearchValue(value) {
@@ -78,15 +79,15 @@ export default function HomeSearch({ initialQuery = "", searchData }) {
   return (
     <section className="scroll-mt-24 bg-[#823038] px-4 py-8 sm:px-6 sm:py-17 lg:px-8" id="explorar">
       <div className="mx-auto max-w-6xl">
-        <div className="max-w-2xl">
+        <Reveal className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#FDFDFF]">Explorar Narabi</p>
           <h2 className="mt-2 text-[#FDFDFF]">Encontrá lo que buscás</h2>
           <p className="mt-2 text-sm leading-6 text-[#FDFDFF]">
             Buscá conciertos, fanprojects o fanbases desde un solo lugar.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="relative mt-5 max-w-2xl">
+        <Reveal className="relative mt-5 max-w-2xl">
           <label className="sr-only" htmlFor="home-search">Buscar en Narabi</label>
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#823038]">
             <SearchIcon />
@@ -110,13 +111,13 @@ export default function HomeSearch({ initialQuery = "", searchData }) {
               Limpiar
             </button>
           ) : null}
-        </div>
+        </Reveal>
 
-        <p className="mt-2 text-xs text-[#FDFDFF]/70" id="home-search-status" role="status">
+        <Reveal as="p" className="mt-2 text-xs text-[#FDFDFF]/70" id="home-search-status" role="status">
           {normalizedQuery
             ? `${resultCount} resultado${resultCount === 1 ? "" : "s"} encontrado${resultCount === 1 ? "" : "s"}.`
             : "Escribí para buscar en toda la comunidad."}
-        </p>
+        </Reveal>
 
         {normalizedQuery ? (
           resultCount > 0 ? (

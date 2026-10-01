@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { faMagnifyingGlass, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faMagnifyingGlass, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function isActivePath(pathname, href) {
@@ -127,6 +127,26 @@ function SearchButton({ isScrolled, onClick }) {
   );
 }
 
+function NotificationsButton({ active, hasIndicator, isScrolled, onClick }) {
+  return (
+    <Link
+      aria-label={hasIndicator ? "Notificaciones (hay sin leer)" : "Notificaciones"}
+      className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition hover:bg-[#FDFDFF]/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${active ? "bg-[#FDFDFF]/15" : ""} ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`}
+      href="/notifications"
+      onClick={onClick}
+      title="Notificaciones"
+    >
+      <FontAwesomeIcon aria-hidden="true" className="size-5" icon={faBell} />
+      {hasIndicator ? (
+        <span
+          aria-hidden="true"
+          className={`absolute right-1 top-1 size-2.5 rounded-full ring-2 ${isScrolled ? "bg-[#823038] ring-[#FFE4F3]" : "bg-[#FDFDFF] ring-[#823038]"}`}
+        />
+      ) : null}
+    </Link>
+  );
+}
+
 function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, onClick, user }) {
   return user ? (
     <ProfileLink
@@ -173,16 +193,7 @@ export default function Navbar({
     { href: "/about", label: "About" },
     { href: "/votaciones", label: "Votaciones" },
     { href: "/fanbases", label: "Fanbases" },
-    ...(user
-      ? [
-          { href: "/dashboard", label: "Dashboard" },
-          {
-            href: "/notifications",
-            label: "Notificaciones",
-            hasIndicator: hasUnreadNotifications,
-          },
-        ]
-      : []),
+    ...(user ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];
 
   useEffect(() => {
@@ -228,7 +239,8 @@ export default function Navbar({
       }`}
     >
       <div className={`mx-auto w-full ${pathname === "/" ? "max-w-7xl px-6 sm:px-10 lg:px-14 xl:px-16" : "max-w-6xl px-4 sm:px-6 lg:px-8"}`}>
-        <div className="flex min-h-14 items-center justify-between gap-3 py-2">
+        {/* Altura fija: 56px en mobile, 66px en xl, con o sin search abierto */}
+        <div className="flex h-14 items-center justify-between gap-3 py-2 xl:h-[66px]">
           <Link
             className={`group shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038] ${isSearchOpen ? "hidden xl:flex" : "flex"}`}
             href="/"
@@ -272,10 +284,10 @@ export default function Navbar({
                 role="search"
               >
                 <label className="sr-only" htmlFor="navbar-search">Buscar en Narabi</label>
-                <div className={`flex min-w-0 flex-1 items-center rounded-full border bg-[#FDFDFF]/10 focus-within:ring-2 ${isScrolled ? "border-[#823038]/35 text-[#823038] focus-within:ring-[#823038]/30" : "border-[#FDFDFF]/50 text-[#FDFDFF] focus-within:ring-[#FDFDFF]/35"}`}>
+                <div className={`flex h-10 min-w-0 flex-1 items-center rounded-full border bg-[#FDFDFF]/10 focus-within:ring-2 xl:h-[50px] ${isScrolled ? "border-[#823038]/35 text-[#823038] focus-within:ring-[#823038]/30" : "border-[#FDFDFF]/50 text-[#FDFDFF] focus-within:ring-[#FDFDFF]/35"}`}>
                   <input
                     autoComplete="off"
-                    className={`h-10 min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${isScrolled ? "placeholder:text-[#823038]/60" : "placeholder:text-[#FDFDFF]/70"}`}
+                    className={`h-full min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${isScrolled ? "placeholder:text-[#823038]/60" : "placeholder:text-[#FDFDFF]/70"}`}
                     id="navbar-search"
                     maxLength={100}
                     name="q"
@@ -292,7 +304,17 @@ export default function Navbar({
                 <button aria-label="Cerrar búsqueda" className={`grid size-9 shrink-0 place-items-center rounded-full text-xl transition hover:bg-[#FDFDFF]/15 ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`} onClick={closeSearch} type="button">×</button>
               </form>
             ) : (
-              <SearchButton isScrolled={isScrolled} onClick={openSearch} />
+              <div className="flex shrink-0 items-center gap-1">
+                <SearchButton isScrolled={isScrolled} onClick={openSearch} />
+                {user ? (
+                  <NotificationsButton
+                    active={isActivePath(pathname, "/notifications")}
+                    hasIndicator={hasUnreadNotifications}
+                    isScrolled={isScrolled}
+                    onClick={closeMenu}
+                  />
+                ) : null}
+              </div>
             )}
 
             <div className="hidden shrink-0 xl:flex">

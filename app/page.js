@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Homemade_Apple, Chiron_GoRound_TC } from "next/font/google";
 
 import Hero from "@/components/Hero";
+import Reveal from "@/components/Reveal";
 
 import HomeSearch from "@/components/home/HomeSearch";
 
@@ -129,7 +130,7 @@ export default async function Home({ searchParams }) {
         </p>
 
         <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-6">
-          <div className="flex flex-col items-center rounded-3xl bg-[#FFE4F3] px-6 py-8 text-center">
+          <Reveal><div className="flex flex-col items-center rounded-3xl bg-[#FFE4F3] px-6 py-8 text-center">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
               📅
             </span>
@@ -148,9 +149,9 @@ export default async function Home({ searchParams }) {
             >
               Conocé más
             </Link>
-          </div>
+          </div></Reveal>
 
-          <div className="flex flex-col items-center rounded-3xl bg-[#B4D4EE] px-6 py-8 text-center">
+          <Reveal><div className="flex flex-col items-center rounded-3xl bg-[#B4D4EE] px-6 py-8 text-center">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
               💌
             </span>
@@ -169,9 +170,9 @@ export default async function Home({ searchParams }) {
             >
               Conocé más
             </Link>
-          </div>
+          </div></Reveal>
 
-          <div className="flex flex-col items-center rounded-3xl bg-[#E1D8FD] px-6 py-8 text-center">
+          <Reveal><div className="flex flex-col items-center rounded-3xl bg-[#E1D8FD] px-6 py-8 text-center">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-3xl">
               🪄
             </span>
@@ -190,7 +191,7 @@ export default async function Home({ searchParams }) {
             >
               Conocé más
             </Link>
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
@@ -227,7 +228,7 @@ export default async function Home({ searchParams }) {
         ) : (
           <HorizontalSlider label="conciertos disponibles">
             {projects.map((project) => (
-              <article
+              <Reveal as="article"
                 className="flex w-[86%] shrink-0 snap-start flex-col justify-between rounded-3xl border border-[#F2B8CF] bg-white p-5 sm:w-[calc((100%-1rem)/2)] xl:w-[calc((100%-2rem)/3)]"
                 key={project.id}
               >
@@ -267,7 +268,7 @@ export default async function Home({ searchParams }) {
                     Ver fanprojects
                   </Link>
                 </div>
-              </article>
+              </Reveal>
             ))}
           </HorizontalSlider>
         )}
@@ -297,12 +298,14 @@ export default async function Home({ searchParams }) {
                     BTS: "/items/bts.png",
                     BLACKPINK: "/items/blackpink_ls.png",
                     SEVENTEEN: "/items/svt.png",
+                    AESPA: "/items/static_vip_1280x1280_aespa_2023_national_1684345938.jpg",
                   };
                   const lightstickSrc =
                     lightstickByGroup[(fanbase.kpopGroup || "").toUpperCase()] ||
                     "/items/hero_one.jpg";
 
                   return (
+                    <Reveal>
                     <Link
                       className="group flex flex-col items-center rounded-3xl px-4 py-3 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-[#823038] focus-visible:ring-offset-4 focus-visible:ring-offset-[#FDFDFF]"
                       href={`/fanbases/${fanbase.id}`}
@@ -311,7 +314,7 @@ export default async function Home({ searchParams }) {
                       <span className="relative block h-32 w-28 transition duration-300 group-hover:scale-105 sm:h-36 sm:w-32">
                         <Image
                           alt={`Lightstick de ${fanbase.kpopGroup}`}
-                          className="object-contain"
+                          className="object-contain group-hover:animate-fanbase-shake motion-reduce:animate-none"
                           fill
                           sizes="(min-width: 640px) 8rem, 7rem"
                           src={lightstickSrc}
@@ -321,6 +324,7 @@ export default async function Home({ searchParams }) {
                         {fanbase.kpopGroup}
                       </h3>
                     </Link>
+                    </Reveal>
                   );
                 })}
               </div>

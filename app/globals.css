@@ -3,6 +3,13 @@
 @theme {
   --font-sans: var(--font-raleway), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  --animate-fanbase-shake: fanbase-shake 0.65s ease-in-out infinite;
+
+  @keyframes fanbase-shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(-1px) rotate(-1deg); }
+    75% { transform: translateX(1px) rotate(1deg); }
+  }
 }
 
 @layer base {
@@ -108,5 +115,26 @@
     color: #5C1F3A;
     border: 1px solid #F2B8CF;
     border-radius: 0.5rem;
+  }
+}
+
+@layer utilities {
+  .home-reveal-ready {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 650ms ease, transform 650ms ease;
+  }
+
+  .home-reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-reveal-ready {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 }
