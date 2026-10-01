@@ -37,7 +37,9 @@ function parseConcertDate(value) {
   if (!match) return null;
 
   const day = Number(match[1]);
-  const month = MONTH_INDEX[match[2].normalize("NFD").replace(/[\u0300-\u036f]/g, "")];
+  const month = MONTH_INDEX[
+    match[2].normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  ];
   const year = Number(match[3]);
 
   if (!Number.isInteger(day) || month === undefined || !Number.isInteger(year)) {
@@ -101,12 +103,16 @@ function downloadCalendarEvent(event) {
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
+
   const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = `${event.concertTitle.toLocaleLowerCase().replace(/[^a-z0-9]+/gi, "-") || "concierto"}.ics`;
+  link.download = `${
+    event.concertTitle.toLocaleLowerCase().replace(/[^a-z0-9]+/gi, "-")
+    || "concierto"
+  }.ics`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -118,7 +124,6 @@ function getCalendarEvents(favorites) {
 
   favorites.forEach((favorite) => {
     const date = parseConcertDate(favorite.concertDate);
-
     if (!date) return;
 
     const existing = grouped.get(favorite.projectId);
@@ -140,13 +145,18 @@ function getCalendarEvents(favorites) {
   return [...grouped.values()].sort((first, second) => first.date - second.date);
 }
 
-export default function PersonalAgenda({ initialFavorites }) {
+export default function PersonalAgenda({
+  initialFavorites,
+  followedFanbases = [],
+}) {
   const { favorites, isLoading } = useFavorites();
   const [now, setNow] = useState(() => new Date());
+
   const initialById = useMemo(
     () => new Map(initialFavorites.map((favorite) => [favorite.id, favorite])),
     [initialFavorites],
   );
+
   const displayedFavorites = useMemo(() => {
     const source = isLoading
       ? initialFavorites
@@ -157,9 +167,16 @@ export default function PersonalAgenda({ initialFavorites }) {
       ...favorite,
     }));
   }, [favorites, initialById, initialFavorites, isLoading]);
-  const events = useMemo(() => getCalendarEvents(displayedFavorites), [displayedFavorites]);
-  const firstUpcomingEvent = events.find((event) => event.date >= startOfMonth(now)) || events[0];
-  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(firstUpcomingEvent?.date || new Date()));
+
+  const events = useMemo(
+    () => getCalendarEvents(displayedFavorites),
+    [displayedFavorites],
+  );
+  const firstUpcomingEvent =
+    events.find((event) => event.date >= startOfMonth(now)) || events[0];
+  const [visibleMonth, setVisibleMonth] = useState(
+    () => startOfMonth(firstUpcomingEvent?.date || new Date()),
+  );
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60000);
@@ -170,23 +187,32 @@ export default function PersonalAgenda({ initialFavorites }) {
   const month = visibleMonth.getMonth();
   const firstWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const calendarCells = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => (
-    index < firstWeekday ? null : index - firstWeekday + 1
-  ));
-  const eventsInMonth = events.filter((event) => (
-    event.date.getFullYear() === year && event.date.getMonth() === month
-  ));
+  const calendarCells = Array.from(
+    { length: firstWeekday + daysInMonth },
+    (_, index) => (index < firstWeekday ? null : index - firstWeekday + 1),
+  );
+  const eventsInMonth = events.filter(
+    (event) => event.date.getFullYear() === year
+      && event.date.getMonth() === month,
+  );
 
   return (
     <section className="mt-10" id="agenda">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Tu planificación</p>
-          <h2 className="mt-2 text-2xl font-semibold text-[#5C1F3A]">Mi agenda</h2>
-          <p className="mt-2 text-sm text-[#8A5468]">Tus fanprojects guardados, fechas y recordatorios en un solo lugar.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
+            Tu planificación
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-[#5C1F3A]">
+            Mi agenda
+          </h2>
+          <p className="mt-2 text-sm text-[#8A5468]">
+            Tus fanprojects guardados, fechas y recordatorios en un solo lugar.
+          </p>
         </div>
         <span className="rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold text-[#823038]">
-          {displayedFavorites.length} guardado{displayedFavorites.length === 1 ? "" : "s"}
+          {displayedFavorites.length} guardado
+          {displayedFavorites.length === 1 ? "" : "s"}
         </span>
       </div>
 
@@ -196,21 +222,28 @@ export default function PersonalAgenda({ initialFavorites }) {
             <button
               aria-label="Mes anterior"
               className="grid size-8 place-items-center rounded-full text-lg text-[#823038] transition hover:bg-white"
-              onClick={() => setVisibleMonth((value) => new Date(value.getFullYear(), value.getMonth() - 1, 1))}
+              onClick={() => setVisibleMonth(
+                (value) => new Date(value.getFullYear(), value.getMonth() - 1, 1),
+              )}
               type="button"
             >
               ‹
             </button>
-            <p className="text-sm font-bold text-[#5C1F3A]">{MONTHS[month]} {year}</p>
+            <p className="text-sm font-bold text-[#5C1F3A]">
+              {MONTHS[month]} {year}
+            </p>
             <button
               aria-label="Mes siguiente"
               className="grid size-8 place-items-center rounded-full text-lg text-[#823038] transition hover:bg-white"
-              onClick={() => setVisibleMonth((value) => new Date(value.getFullYear(), value.getMonth() + 1, 1))}
+              onClick={() => setVisibleMonth(
+                (value) => new Date(value.getFullYear(), value.getMonth() + 1, 1),
+              )}
               type="button"
             >
               ›
             </button>
           </div>
+
           <div className="mt-4 rounded-2xl bg-white p-3">
             <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase text-[#A36A7C]">
               {WEEKDAYS.map((day) => <span key={day}>{day}</span>)}
@@ -218,7 +251,8 @@ export default function PersonalAgenda({ initialFavorites }) {
             <div className="mt-2 grid grid-cols-7 gap-y-1 text-center text-xs">
               {calendarCells.map((day, index) => {
                 const date = day ? new Date(year, month, day) : null;
-                const hasEvent = date && events.some((event) => sameDay(event.date, date));
+                const hasEvent = date
+                  && events.some((event) => sameDay(event.date, date));
                 const isToday = date && sameDay(date, now);
 
                 return (
@@ -242,14 +276,30 @@ export default function PersonalAgenda({ initialFavorites }) {
 
         <div className="space-y-3">
           {eventsInMonth.length ? eventsInMonth.map((event) => (
-            <article className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#F2B8CF] bg-white p-4 shadow-[0_8px_20px_rgba(130,48,56,0.05)]" key={event.projectId}>
-              <time className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#FFE4F3] text-center text-sm font-bold leading-4 text-[#823038]" dateTime={event.date.toISOString()}>
-                {event.date.getDate()}<span className="text-[9px] uppercase">{MONTHS[event.date.getMonth()].slice(0, 3)}</span>
+            <article
+              className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#F2B8CF] bg-white p-4 shadow-[0_8px_20px_rgba(130,48,56,0.05)]"
+              key={event.projectId}
+            >
+              <time
+                className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#FFE4F3] text-center text-sm font-bold leading-4 text-[#823038]"
+                dateTime={event.date.toISOString()}
+              >
+                {event.date.getDate()}
+                <span className="text-[9px] uppercase">
+                  {MONTHS[event.date.getMonth()].slice(0, 3)}
+                </span>
               </time>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-[#5C1F3A]">{event.concertTitle}</p>
-                <p className="mt-0.5 text-xs text-[#8A5468]">{event.concertCountry || event.fanprojects.length + " fanproject(s) guardados"}</p>
-                <p className="mt-1 text-xs font-semibold text-[#823038]">{getCountdown(event.date, now)}</p>
+                <p className="truncate text-sm font-bold text-[#5C1F3A]">
+                  {event.concertTitle}
+                </p>
+                <p className="mt-0.5 text-xs text-[#8A5468]">
+                  {event.concertCountry
+                    || `${event.fanprojects.length} fanproject(s) guardados`}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-[#823038]">
+                  {getCountdown(event.date, now)}
+                </p>
               </div>
               <button
                 className="rounded-full border border-[#823038] px-3 py-1.5 text-xs font-bold text-[#823038] transition hover:bg-[#823038] hover:text-white"
@@ -261,41 +311,93 @@ export default function PersonalAgenda({ initialFavorites }) {
             </article>
           )) : (
             <div className="rounded-2xl border border-dashed border-[#EAB0C8] bg-white p-5 text-sm text-[#8A5468]">
-              No hay conciertos guardados para este mes. Elegí otro mes o guardá un fanproject para verlo acá.
+              No hay conciertos guardados para este mes. Elegí otro mes o guardá
+              un fanproject para verlo acá.
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold text-[#5C1F3A]">Fanprojects guardados</h3>
-        {isLoading ? (
-          <p className="mt-4 text-sm text-[#8A5468]">Cargando tus guardados...</p>
-        ) : displayedFavorites.length ? (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {displayedFavorites.map((favorite) => (
-              <article className="flex min-w-0 flex-col justify-between rounded-2xl border border-[#F2B8CF] bg-white p-4" key={favorite.id}>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#C0567A]">
-                    {favorite.concertTitle || "Concierto"}
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div>
+          <h3 className="text-xl font-semibold text-[#5C1F3A]">
+            Fanprojects guardados
+          </h3>
+
+          {isLoading ? (
+            <p className="mt-4 text-sm text-[#8A5468]">
+              Cargando tus guardados...
+            </p>
+          ) : displayedFavorites.length ? (
+            <div className="mt-4 grid gap-4">
+              {displayedFavorites.map((favorite) => (
+                <article
+                  className="flex min-w-0 flex-col justify-between rounded-2xl border border-[#F2B8CF] bg-white p-4"
+                  key={favorite.id}
+                >
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#C0567A]">
+                      {favorite.concertTitle || "Concierto"}
+                    </p>
+                    <h4 className="mt-2 break-words text-lg font-semibold text-[#5C1F3A]">
+                      {favorite.title}
+                    </h4>
+                    <p className="mt-2 text-xs text-[#8A5468]">
+                      {favorite.concertDate || "Fecha a confirmar"}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <Link
+                      className="text-sm font-semibold text-[#823038] hover:underline"
+                      href={favorite.href}
+                    >
+                      Ver detalle
+                    </Link>
+                    <FavoriteButton target={favorite} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-[#EAB0C8] bg-white p-5 text-sm text-[#8A5468]">
+              Todavía no guardaste fanprojects. Explorá los conciertos para
+              crear tu agenda.
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold text-[#5C1F3A]">
+            Fanbases que seguís
+          </h3>
+
+          {followedFanbases.length ? (
+            <div className="mt-4 grid gap-4">
+              {followedFanbases.map((fanbase) => (
+                <Link
+                  className="block rounded-2xl border border-[#F2B8CF] bg-white p-4 transition hover:border-[#D985A5]"
+                  href={`/fanbases/${fanbase.id}`}
+                  key={fanbase.id}
+                >
+                  <h4 className="font-semibold text-[#5C1F3A]">
+                    {fanbase.name}
+                  </h4>
+                  <p className="mt-1 text-sm text-[#8A5468]">
+                    Fanbase de {fanbase.kpopGroup}
                   </p>
-                  <h4 className="mt-2 break-words text-lg font-semibold text-[#5C1F3A]">{favorite.title}</h4>
-                  <p className="mt-2 text-xs text-[#8A5468]">{favorite.concertDate || "Fecha a confirmar"}</p>
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <Link className="text-sm font-semibold text-[#823038] hover:underline" href={favorite.href}>
-                    Ver detalle
-                  </Link>
-                  <FavoriteButton target={favorite} />
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-4 rounded-2xl border border-dashed border-[#EAB0C8] bg-white p-5 text-sm text-[#8A5468]">
-            Todavía no guardaste fanprojects. Explorá los conciertos para crear tu agenda.
-          </div>
-        )}
+                  <p className="mt-2 text-xs text-[#8A5468]">
+                    {[fanbase.city, fanbase.country].filter(Boolean).join(", ")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-[#EAB0C8] bg-white p-5 text-sm text-[#8A5468]">
+              Todavía no seguís ninguna fanbase. Visitá una comunidad para
+              empezar a seguirla.
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

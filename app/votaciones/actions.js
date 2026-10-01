@@ -106,3 +106,29 @@ export async function toggleVotingReaction(formData) {
     redirect(`/votaciones?status=reaction-unavailable#votacion-${projectId}`);
   }
 }
+
+export async function toggleVotingReactionInstant(projectId, reaction) {
+  const user = await getCurrentUser();
+
+  if (!user) return { requiresLogin: true };
+  const safeProjectId = typeof projectId === "string" && !projectId.includes("/")
+    ? projectId.trim()
+    : "";
+
+  if (!safeProjectId || !["like", "dislike"].includes(reaction)) {
+    return { error: "La reacción no es válida." };
+  }
+
+  try {
+    const result = await toggleFanProjectVotingReaction({
+      projectId: safeProjectId,
+      reaction,
+      userId: user.uid,
+    });
+    revalidatePath("/votaciones");
+    return { reaction: result.reaction };
+  } catch (error) {
+    console.error("Could not update voting reaction:", error);
+    return { error: "No se pudo actualizar tu reacción." };
+  }
+}

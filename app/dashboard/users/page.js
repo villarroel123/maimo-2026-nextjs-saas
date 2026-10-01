@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile, listUserProfiles } from "@/lib/users/users";
 
 import { createUser, deleteUser } from "./actions";
+import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,12 @@ export default async function UsersPage() {
 
   return (
     <main className="min-h-screen bg-[#FDFDFF] pb-17 text-[#823038]">
+      <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        <Link className="inline-flex items-center gap-2 text-sm font-semibold text-[#C0567A] hover:underline" href="/dashboard">
+          <CircleArrowIcon direction="left" className="size-4" />
+          Volver a dashboard
+        </Link>
+      </div>
       {/* HEADER */}
       <header className="mx-auto flex w-full max-w-6xl flex-col gap-5 border-b border-[#823038]/20 px-4 py-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
         <div>

@@ -26,31 +26,30 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#EEEEEE]">
       <section
-        className="relative overflow-hidden bg-cover bg-center bg-no-repeat px-4 py-20 text-[#823038] sm:px-6 sm:py-28 lg:px-8"
-        style={{ backgroundImage: "url('/items/fondo.png')" }}
-      >
-        <div className="relative mx-auto max-w-5xl">
-          <p className="inline-flex rounded-full border border-[#823038]/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#823038]">
-            De fans para fans
-          </p>
+  className="relative overflow-hidden bg-cover bg-center bg-no-repeat px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-8"
+  style={{ backgroundImage: "url('/items/concert-img.jpg')" }}
+>
+  <div className="absolute inset-0 bg-black/55" />
 
-          <h1 className="mt-6 max-w-3xl text-5xl leading-tight sm:text-7xl">
-            Los conciertos se disfrutan más en comunidad.
-          </h1>
+  <div className="relative mx-auto max-w-5xl">
+    <p className="inline-flex rounded-full border border-white/50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">
+      De fans para fans
+    </p>
 
-          <p className="mt-6 max-w-2xl text-base leading-7 text-[#823038]/75 sm:text-lg sm:leading-8">
-            Narabi es un espacio para encontrar conciertos, compartir ideas y
-            organizar fanprojects junto a otras personas fans.
-          </p>
+    <h1 className="mt-6 max-w-3xl text-5xl leading-tight sm:text-7xl">
+      Los conciertos se disfrutan más en comunidad.
+    </h1>
 
-          <Link
-            className="mt-9 inline-flex min-h-11 items-center justify-center rounded-full bg-[#823038] px-6 text-sm font-bold text-[#FDFDFF] transition hover:bg-[#5C1F3A]"
-            href="/fanbases"
-          >
-            Conocé las fanbases
-          </Link>
-        </div>
-      </section>
+    <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-lg sm:leading-8">
+      Narabi es un espacio para encontrar conciertos, compartir ideas y
+      organizar fanprojects junto a otras personas fans.
+    </p>
+
+    <Link className="mt-9 inline-flex min-h-11 items-center justify-center rounded-full bg-[#FFE4F3] px-6 text-sm font-bold text-[#823038] transition hover:bg-[#5C1F3A]" href="/fanbases">
+    Conocé las fanbases
+    </Link>
+  </div>
+</section>
 
       {/* SECCIÓN A ANCHO COMPLETO */}
       <section className="w-full bg-[#FFE4F3] px-4 py-16 sm:px-6 sm:py-20 lg:px-8">

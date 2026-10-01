@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProjectWithDetails } from "@/lib/projects/projects";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
@@ -63,10 +64,13 @@ export default async function ProjectDetailPage({ params }) {
                 key={sub.id}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-[#F2B8CF] bg-white shadow-[0_16px_34px_-30px_rgba(92,31,58,0.7)] transition duration-200 hover:border-[#D985A5] hover:shadow-[0_20px_35px_-28px_rgba(92,31,58,0.45)] sm:flex-row"
               >
-                <div className="h-40 shrink-0 overflow-hidden bg-[#FFE4F3] sm:h-auto sm:w-56">
-                  <img
+                <div className="relative h-40 shrink-0 overflow-hidden bg-[#FFE4F3] sm:h-auto sm:w-56">
+                  <Image
                     src={image}
                     alt={`Imagen de ${sub.titulo}`}
+                    fill
+                    sizes="(min-width: 640px) 224px, 100vw"
+                    unoptimized={/^https?:\/\//i.test(image)}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                 </div>

@@ -56,6 +56,7 @@ export default function UserForm({
           defaultValue={user?.user_type || "user"}
         >
           <option value="user">user</option>
+          <option value="fanbase">fanbase</option>
           <option value="admin">admin</option>
         </select>
       </label>

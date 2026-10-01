@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getProjects, deleteProject } from "@/lib/projects/projects";
+import { deleteProject, getProjectsWithFanProjects } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 import DeleteButton from "@/components/DeleteButton";
 
@@ -13,10 +14,11 @@ export default async function ProjectsPage() {
   const profile = user ? await getCurrentUserProfile(user) : null;
   const isAdmin = profile?.user_type === "admin";
 
-  const projects = await getProjects();
+  const projects = await getProjectsWithFanProjects();
 
   async function handleDeleteProject(formData) {
     "use server";
+    await requireAdmin();
     const projectId = formData.get("projectId");
     await deleteProject(projectId);
     redirect("/projects");
@@ -27,7 +29,7 @@ export default async function ProjectsPage() {
       <div className="mb-6 flex justify-between items-center">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
           <CircleArrowIcon direction="left" className="size-4" />
-          Volver al Dashboard
+          Volver a dashboard
         </Link>
         {isAdmin && (
           <Link

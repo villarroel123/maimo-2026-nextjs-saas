@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Homemade_Apple, Chiron_GoRound_TC } from "next/font/google";
 import LoginForm from "@/components/LoginForm";
 import { getCurrentUser } from "@/lib/firebase/session";
+import { getCurrentUserProfile } from "@/lib/users/users";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export default async function LoginPage() {
   const user = await getCurrentUser();
 
   if (user) {
-    redirect("/dashboard");
+    const profile = await getCurrentUserProfile(user);
+    redirect(profile?.user_type === "admin" || profile?.user_type === "fanbase" ? "/dashboard" : "/profile");
   }
 
   return (

@@ -43,7 +43,7 @@ export default async function NewProjectPage() {
       <div className="mb-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
           <CircleArrowIcon direction="left" className="size-4" />
-          Volver al Dashboard
+          Volver a dashboard
         </Link>
       </div>
 

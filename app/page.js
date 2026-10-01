@@ -45,11 +45,11 @@ function getConcertArtist(project) {
 export default async function Home({ searchParams }) {
   const params = await searchParams;
   const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
-  const [projects, votingConcerts, fanbases] = await Promise.all([
+  const [projects, fanbases] = await Promise.all([
     getProjectsWithFanProjects(),
-    getFanProjectVotingConcerts(),
     getFanbases(),
   ]);
+  const votingConcerts = await getFanProjectVotingConcerts(undefined, projects);
   const concertsByArtist = projects.map((project) => ({ project, artist: getConcertArtist(project) }));
   const searchData = {
     concerts: concertsByArtist.map(({ project, artist }) => ({
@@ -265,7 +265,7 @@ export default async function Home({ searchParams }) {
                     className="inline-flex h-10 items-center justify-center rounded-full bg-[#5C1F3A] px-4 text-sm font-semibold text-white transition hover:bg-[#7a2a4d]"
                     href={`/projects/${project.id}`}
                   >
-                    Ver fanprojects
+                    Mas informacion
                   </Link>
                 </div>
               </Reveal>
@@ -305,25 +305,24 @@ export default async function Home({ searchParams }) {
                     "/items/hero_one.jpg";
 
                   return (
-                    <Reveal>
-                    <Link
-                      className="group flex flex-col items-center rounded-3xl px-4 py-3 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-[#823038] focus-visible:ring-offset-4 focus-visible:ring-offset-[#FDFDFF]"
-                      href={`/fanbases/${fanbase.id}`}
-                      key={fanbase.id}
-                    >
-                      <span className="relative block h-32 w-28 transition duration-300 group-hover:scale-105 sm:h-36 sm:w-32">
-                        <Image
-                          alt={`Lightstick de ${fanbase.kpopGroup}`}
-                          className="object-contain group-hover:animate-fanbase-shake motion-reduce:animate-none"
-                          fill
-                          sizes="(min-width: 640px) 8rem, 7rem"
-                          src={lightstickSrc}
-                        />
-                      </span>
-                      <h3 className="mt-4 text-xl text-[#823038] transition group-hover:text-[#C0567A]">
-                        {fanbase.kpopGroup}
-                      </h3>
-                    </Link>
+                    <Reveal key={fanbase.id}>
+                      <Link
+                        className="group flex flex-col items-center rounded-3xl px-4 py-3 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-[#823038] focus-visible:ring-offset-4 focus-visible:ring-offset-[#FDFDFF]"
+                        href={`/fanbases/${fanbase.id}`}
+                      >
+                        <span className="relative block h-32 w-28 transition duration-300 group-hover:scale-105 sm:h-36 sm:w-32">
+                          <Image
+                            alt={`Lightstick de ${fanbase.kpopGroup}`}
+                            className="object-contain group-hover:animate-fanbase-shake motion-reduce:animate-none"
+                            fill
+                            sizes="(min-width: 640px) 8rem, 7rem"
+                            src={lightstickSrc}
+                          />
+                        </span>
+                        <h3 className="mt-4 text-xl text-[#823038] transition group-hover:text-[#C0567A]">
+                          {fanbase.kpopGroup}
+                        </h3>
+                      </Link>
                     </Reveal>
                   );
                 })}

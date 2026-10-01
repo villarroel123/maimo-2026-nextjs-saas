@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,13 +11,18 @@ import { getFanprojectImage } from "@/lib/projects/fanproject-image";
 import { getProjectsWithFanProjects } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import {
+  approveFanbaseMembershipRequest,
   getFanbase,
   getFanbaseMembers,
   getFanbaseFollowerCount,
   getFanbaseMembership,
+  getFanbaseMembershipRequest,
+  getFanbaseMembershipRequests,
   getFanbaseRoleLabel,
   followFanbase,
   isFollowingFanbase,
+  rejectFanbaseMembershipRequest,
+  requestFanbaseMembership,
   unfollowFanbase,
 } from "@/lib/fanbases/fanbases";
 import { getCurrentUserProfile } from "@/lib/users/users";
@@ -31,27 +37,25 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function canManagePosts(profile, membership) {
+function canManagePosts(profile, fanbaseId) {
   return profile?.user_type === "admin" ||
-    membership?.role === "fundador" ||
-    membership?.role === "organizador";
+    (profile?.user_type === "fanbase" && profile.fanbases?.includes(fanbaseId));
 }
 
-function canEditPosts(profile, membership) {
-  return profile?.user_type === "admin" || Boolean(membership);
+function canEditPosts(profile, fanbaseId) {
+  return canManagePosts(profile, fanbaseId);
 }
 
-async function requirePostManager(fanbaseId) {
+async function requireFanbaseManager(fanbaseId) {
   const user = await getCurrentUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/fanbases/${fanbaseId}`)}`);
 
-  const [fanbase, profile, membership] = await Promise.all([
+  const [fanbase, profile] = await Promise.all([
     getFanbase(fanbaseId),
     getCurrentUserProfile(user),
-    getFanbaseMembership(fanbaseId, user.uid),
   ]);
 
-  if (!fanbase || !canManagePosts(profile, membership)) {
+  if (!fanbase || !canManagePosts(profile, fanbaseId)) {
     throw new Error("No tenés permiso para gestionar las publicaciones de esta fanbase.");
   }
 
@@ -65,14 +69,13 @@ async function requirePostEditor(fanbaseId) {
   const user = await getCurrentUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/fanbases/${fanbaseId}`)}`);
 
-  const [fanbase, profile, membership] = await Promise.all([
+  const [fanbase, profile] = await Promise.all([
     getFanbase(fanbaseId),
     getCurrentUserProfile(user),
-    getFanbaseMembership(fanbaseId, user.uid),
   ]);
 
-  if (!fanbase || !canEditPosts(profile, membership)) {
-    throw new Error("Solo administradores e integrantes de esta fanbase pueden editar sus publicaciones.");
+  if (!fanbase || !canEditPosts(profile, fanbaseId)) {
+    throw new Error("Solo administradores de esta fanbase pueden editar sus publicaciones.");
   }
 
   return {
@@ -94,21 +97,25 @@ function formatPostDate(value) {
 export default async function FanbaseDetailPage({ params }) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  const [fanbase, members, followerCount, projects, posts, profile, membership, isFollowing] = await Promise.all([
+  const [fanbase, profile, membership] = await Promise.all([
     getFanbase(id),
-    getFanbaseMembers(id),
-    getFanbaseFollowerCount(id),
-    getProjectsWithFanProjects(),
-    getFanbasePosts(id),
     currentUser ? getCurrentUserProfile(currentUser) : null,
     currentUser ? getFanbaseMembership(id, currentUser.uid) : null,
-    currentUser ? isFollowingFanbase(id, currentUser.uid) : false,
   ]);
 
   if (!fanbase) notFound();
 
-  const mayManagePosts = canManagePosts(profile, membership);
-  const mayEditPosts = canEditPosts(profile, membership);
+  const mayManagePosts = canManagePosts(profile, id);
+  const mayEditPosts = canEditPosts(profile, id);
+  const [members, membershipRequests, membershipRequest, followerCount, projects, posts, isFollowing] = await Promise.all([
+    mayManagePosts ? getFanbaseMembers(id) : Promise.resolve([]),
+    mayManagePosts ? getFanbaseMembershipRequests(id) : Promise.resolve([]),
+    currentUser && !membership && !mayManagePosts ? getFanbaseMembershipRequest(id, currentUser.uid) : null,
+    getFanbaseFollowerCount(id),
+    getProjectsWithFanProjects(),
+    getFanbasePosts(id),
+    currentUser ? isFollowingFanbase(id, currentUser.uid) : false,
+  ]);
   const fanprojects = projects.flatMap((project) => (
     (project.subitems || [])
       .filter((fanproject) => fanproject.fanbaseId === fanbase.id)
@@ -136,10 +143,58 @@ export default async function FanbaseDetailPage({ params }) {
     redirect(detailPath);
   }
 
+  async function handleMembershipRequest() {
+    "use server";
+
+    const user = await getCurrentUser();
+    const detailPath = `/fanbases/${id}`;
+
+    if (!user) redirect(`/login?next=${encodeURIComponent(detailPath)}`);
+
+    const userProfile = await getCurrentUserProfile(user);
+    await requestFanbaseMembership({
+      fanbaseId: id,
+      user: {
+        uid: user.uid,
+        displayName: userProfile?.displayName || user.name || user.email?.split("@")[0] || "Fan de Narabi",
+        email: user.email || "",
+        photoURL: userProfile?.photoURL || user.picture || "",
+      },
+    });
+
+    revalidatePath(detailPath);
+    redirect(`${detailPath}?solicitud=enviada`);
+  }
+
+  async function handleMembershipReview(formData) {
+    "use server";
+
+    await requireFanbaseManager(id);
+    const uid = String(formData.get("uid") || "").trim();
+    const decision = String(formData.get("decision") || "").trim();
+
+    if (decision === "reject") {
+      await rejectFanbaseMembershipRequest({ fanbaseId: id, uid });
+    } else if (decision === "accept-admin") {
+      await approveFanbaseMembershipRequest({
+        fanbaseId: id,
+        uid,
+        role: "organizador",
+      });
+    } else {
+      throw new Error("La decisión seleccionada no es válida.");
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/fanbases");
+    revalidatePath(`/fanbases/${id}`);
+    redirect(`/fanbases/${id}#solicitudes`);
+  }
+
   async function handleCreatePost(formData) {
     "use server";
 
-    const author = await requirePostManager(id);
+    const author = await requireFanbaseManager(id);
     await createFanbasePost({
       fanbaseId: id,
       author,
@@ -158,7 +213,7 @@ export default async function FanbaseDetailPage({ params }) {
   async function handleDeletePost(formData) {
     "use server";
 
-    await requirePostManager(id);
+    await requireFanbaseManager(id);
     await deleteFanbasePost(id, formData.get("postId"));
     revalidatePath(`/fanbases/${id}`);
     redirect(`/fanbases/${id}#publicaciones`);
@@ -210,7 +265,21 @@ export default async function FanbaseDetailPage({ params }) {
                 <span className="w-fit rounded-full border border-[#F2B8CF] bg-white px-4 py-2 text-sm font-semibold text-[#823038]">
                   Sos {getFanbaseRoleLabel(membership.role).toLowerCase()}
                 </span>
-              ) : null}
+              ) : mayManagePosts ? (
+                <span className="w-fit rounded-full border border-[#F2B8CF] bg-white px-4 py-2 text-sm font-semibold text-[#823038]">
+                  Acceso de administrador
+                </span>
+              ) : membershipRequest ? (
+                <span className="w-fit rounded-full border border-[#F2B8CF] bg-white px-4 py-2 text-sm font-semibold text-[#823038]">
+                  Solicitud pendiente
+                </span>
+              ) : (
+                <form action={handleMembershipRequest}>
+                  <button className="rounded-full border border-[#823038] bg-white px-5 py-2.5 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" type="submit">
+                    Solicitar ser administrador
+                  </button>
+                </form>
+              )}
               <form action={handleFollow}>
                 <input name="intent" type="hidden" value={isFollowing ? "unfollow" : "follow"} />
                 <button className="rounded-full bg-[#5C1F3A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#7A2A4D]" type="submit">
@@ -221,7 +290,7 @@ export default async function FanbaseDetailPage({ params }) {
           </div>
           {fanbase.description ? <p className="relative mt-7 max-w-3xl text-sm leading-6 text-[#7F4A5E]">{fanbase.description}</p> : null}
           <div className="relative mt-6 flex flex-wrap gap-2.5 text-sm">
-            <span className="rounded-full border border-[#F2B8CF] bg-white/75 px-3 py-1.5 text-[#823038]">{members.length} integrante{members.length === 1 ? "" : "s"}</span>
+            <span className="rounded-full border border-[#F2B8CF] bg-white/75 px-3 py-1.5 text-[#823038]">{fanbase.memberCount} integrante{fanbase.memberCount === 1 ? "" : "s"}</span>
             <span className="rounded-full border border-[#F2B8CF] bg-white/75 px-3 py-1.5 text-[#823038]">{followerCount} seguidor{followerCount === 1 ? "" : "es"}</span>
             <span className="rounded-full border border-[#F2B8CF] bg-white/75 px-3 py-1.5 text-[#823038]">{posts.length} publicaci{posts.length === 1 ? "ón" : "ones"}</span>
             {fanbase.instagram ? <span className="rounded-full border border-[#F2B8CF] bg-white/75 px-3 py-1.5 text-[#823038]">@{fanbase.instagram}</span> : null}
@@ -238,8 +307,8 @@ export default async function FanbaseDetailPage({ params }) {
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 {fanprojects.map((fanproject) => (
                   <Link className="group overflow-hidden rounded-2xl border border-[#F2B8CF] bg-white transition hover:-translate-y-1 hover:border-[#D985A5]" href={`/projects/${fanproject.project.id}/activities/${fanproject.id}`} key={`${fanproject.project.id}-${fanproject.id}`}>
-                    <div className="h-32 overflow-hidden bg-[#FFE4F3]">
-                      <img alt={`Imagen de ${fanproject.titulo}`} className="size-full object-cover transition duration-300 group-hover:scale-105" src={getFanprojectImage(fanproject, fanproject.project)} />
+                    <div className="relative h-32 overflow-hidden bg-[#FFE4F3]">
+                      <Image alt={`Imagen de ${fanproject.titulo}`} className="size-full object-cover transition duration-300 group-hover:scale-105" fill sizes="(min-width: 640px) 50vw, 100vw" src={getFanprojectImage(fanproject, fanproject.project)} unoptimized={/^https?:\/\//i.test(getFanprojectImage(fanproject, fanproject.project))} />
                     </div>
                     <div className="p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#C0567A]">{fanproject.project.Titulo}</p>
@@ -255,17 +324,54 @@ export default async function FanbaseDetailPage({ params }) {
           <aside className="rounded-3xl border border-[#F2B8CF] bg-white p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Equipo</p>
             <h2 className="mt-2 text-xl font-semibold text-[#5C1F3A]">Integrantes</h2>
-            <div className="mt-5 space-y-3">
-              {members.slice(0, 12).map((member) => (
-                <article className="flex items-center gap-3" key={member.uid}>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#FFE4F3] text-sm font-bold text-[#823038]">{member.displayName.charAt(0).toUpperCase()}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#5C1F3A]">{member.displayName}</p>
-                    <p className="text-xs text-[#8A5468]">{getFanbaseRoleLabel(member.role)}</p>
+            {mayManagePosts ? (
+              <>
+                <div className="mt-5 space-y-3">
+                  {members.slice(0, 12).map((member) => (
+                    <article className="flex items-center gap-3" key={member.uid}>
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#FFE4F3] text-sm font-bold text-[#823038]">{member.displayName.charAt(0).toUpperCase()}</span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[#5C1F3A]">{member.displayName}</p>
+                        <p className="text-xs text-[#8A5468]">{getFanbaseRoleLabel(member.role)}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <section className="mt-6 border-t border-[#F2B8CF] pt-5" id="solicitudes">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-base font-semibold text-[#5C1F3A]">Solicitudes de miembros</h3>
+                    <span className="rounded-full bg-[#FFE4F3] px-2.5 py-1 text-xs font-semibold text-[#823038]">{membershipRequests.length}</span>
                   </div>
-                </article>
-              ))}
-            </div>
+                  {membershipRequests.length ? (
+                    <div className="mt-4 space-y-4">
+                      {membershipRequests.map((request) => (
+                        <article className="rounded-2xl bg-[#FFF7FB] p-3" key={request.uid}>
+                          <div className="flex items-center gap-3">
+                            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#FFE4F3] text-sm font-bold text-[#823038]">{request.displayName.charAt(0).toUpperCase()}</span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-[#5C1F3A]">{request.displayName}</p>
+                              {request.email ? <p className="truncate text-xs text-[#8A5468]">{request.email}</p> : null}
+                            </div>
+                          </div>
+                          <form action={handleMembershipReview} className="mt-3 grid gap-2">
+                            <input name="uid" type="hidden" value={request.uid} />
+                            <button className="rounded-full bg-[#823038] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#5C1F3A]" name="decision" type="submit" value="accept-admin">Aceptar como administrador</button>
+                            <button className="px-3 py-1 text-xs font-semibold text-[#8A5468] transition hover:text-[#5C1F3A]" name="decision" type="submit" value="reject">Rechazar</button>
+                          </form>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm leading-6 text-[#8A5468]">No hay solicitudes pendientes.</p>
+                  )}
+                </section>
+              </>
+            ) : (
+              <p className="mt-4 text-sm leading-6 text-[#8A5468]">
+                La lista de integrantes y los permisos son información privada para administradores de la fanbase.
+              </p>
+            )}
           </aside>
         </div>
 

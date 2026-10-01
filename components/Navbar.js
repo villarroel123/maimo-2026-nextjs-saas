@@ -50,22 +50,13 @@ function NavLink({
   );
 }
 
-function ProfileLink({
-  avatarUrl,
-  compact = false,
-  displayName,
-  homeStyle = false,
-  isScrolled = false,
-  onClick,
-}) {
-  const initial = displayName.trim().charAt(0).toUpperCase() || "N";
-
+function ProfileLink({ avatarUrl, displayName, isScrolled = false, onClick }) {
   return (
     <Link
       aria-label={`Abrir perfil de ${displayName}`}
-      className={homeStyle
-        ? `inline-flex size-9 shrink-0 items-center justify-center transition hover:opacity-75 focus-visible:rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"}`
-        : `group inline-flex min-w-0 items-center gap-2 rounded-full border border-[#FDFDFF]/40 bg-[#FDFDFF]/10 p-1.5 transition hover:border-[#FDFDFF] hover:bg-[#FDFDFF] hover:text-[#823038] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FDFDFF] ${isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"} ${compact ? "pr-1.5" : "pr-3"}`}
+      className={`inline-flex size-9 shrink-0 items-center justify-center transition hover:opacity-75 focus-visible:rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${
+        isScrolled ? "text-[#823038]" : "text-[#FDFDFF]"
+      }`}
       href="/profile"
       onClick={onClick}
       title={displayName}
@@ -73,7 +64,7 @@ function ProfileLink({
       {avatarUrl ? (
         <Image
           alt=""
-          className={`${homeStyle ? "size-9" : "size-7 border border-[#FDFDFF]/60"} shrink-0 rounded-full object-cover`}
+          className="size-9 shrink-0 rounded-full object-cover"
           height={36}
           referrerPolicy="no-referrer"
           src={avatarUrl}
@@ -81,17 +72,8 @@ function ProfileLink({
           width={36}
         />
       ) : (
-        homeStyle ? (
-          <FontAwesomeIcon aria-hidden="true" className="size-6" icon={faUser} />
-        ) : (
-          <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FDFDFF] text-xs font-bold text-[#823038]">
-            {initial}
-          </span>
-        )
+        <FontAwesomeIcon aria-hidden="true" className="size-6" icon={faUser} />
       )}
-      {!homeStyle && !compact ? (
-        <span className="max-w-28 truncate text-sm font-semibold sm:max-w-36">{displayName}</span>
-      ) : null}
     </Link>
   );
 }
@@ -147,12 +129,11 @@ function NotificationsButton({ active, hasIndicator, isScrolled, onClick }) {
   );
 }
 
-function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, onClick, user }) {
+function DesktopAccount({ avatarUrl, displayName, isScrolled, onClick, user }) {
   return user ? (
     <ProfileLink
       avatarUrl={avatarUrl}
       displayName={displayName}
-      homeStyle={homeStyle}
       isScrolled={isScrolled}
       onClick={onClick}
     />
@@ -168,6 +149,7 @@ function DesktopAccount({ avatarUrl, displayName, homeStyle, isScrolled, onClick
 }
 
 export default function Navbar({
+  canAccessDashboard = false,
   hasUnreadNotifications = false,
   profile,
   user,
@@ -193,7 +175,7 @@ export default function Navbar({
     { href: "/about", label: "About" },
     { href: "/votaciones", label: "Votaciones" },
     { href: "/fanbases", label: "Fanbases" },
-    ...(user ? [{ href: "/dashboard", label: "Dashboard" }] : []),
+    ...(canAccessDashboard ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];
 
   useEffect(() => {
@@ -318,7 +300,13 @@ export default function Navbar({
             )}
 
             <div className="hidden shrink-0 xl:flex">
-              <DesktopAccount avatarUrl={avatarUrl} displayName={displayName} homeStyle={pathname === "/"} isScrolled={isScrolled} onClick={closeSearch} user={user} />
+              <DesktopAccount
+                avatarUrl={avatarUrl}
+                displayName={displayName}
+                isScrolled={isScrolled}
+                onClick={closeSearch}
+                user={user}
+              />
             </div>
 
             {!isSearchOpen ? (
@@ -326,9 +314,7 @@ export default function Navbar({
                 {user ? (
                   <ProfileLink
                     avatarUrl={avatarUrl}
-                    compact
                     displayName={displayName}
-                    homeStyle={pathname === "/"}
                     isScrolled={isScrolled}
                     onClick={closeMenu}
                   />

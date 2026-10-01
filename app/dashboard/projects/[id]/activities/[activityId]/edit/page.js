@@ -7,7 +7,6 @@ import { FANPROJECT_STATUSES, getFanProjectStatus } from "@/lib/projects/fanproj
 import { sectorInstructionsToText } from "@/lib/projects/sector-instructions";
 import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
-import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
@@ -18,17 +17,26 @@ export default async function EditActivityPage({ params }) {
   if (!user) redirect("/login");
 
   const profile = await getCurrentUserProfile(user);
-  if (profile?.user_type !== "admin") redirect("/dashboard");
+  const isAdmin = profile?.user_type === "admin";
+  const isFanbaseAccount = profile?.user_type === "fanbase";
+  if (!isAdmin && !isFanbaseAccount) redirect("/profile");
 
   const [activity, fanbases] = await Promise.all([
     getActivityDetails(id, activityId),
     getOrganizedFanbasesForUser(user.uid),
   ]);
   if (!activity) redirect(`/dashboard/projects/${id}`);
+  const managedFanbaseIds = new Set(fanbases.map((fanbase) => fanbase.id));
+  if (!isAdmin && !managedFanbaseIds.has(activity.fanbaseId)) redirect(`/dashboard/projects/${id}`);
 
   async function handleUpdateActivity(formData) {
     "use server";
-    const currentUser = await requireAdmin();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Unauthorized.");
+    const currentProfile = await getCurrentUserProfile(currentUser);
+    const currentIsAdmin = currentProfile?.user_type === "admin";
+    const currentIsFanbase = currentProfile?.user_type === "fanbase";
+    if (!currentIsAdmin && !currentIsFanbase) throw new Error("Forbidden.");
     const titulo = String(formData.get("titulo") || "").trim();
     const descripcion = String(formData.get("descripcion") || "").trim();
     const elementos = String(formData.get("elementos") || "");
@@ -37,6 +45,12 @@ export default async function EditActivityPage({ params }) {
     const fanbaseId = String(formData.get("fanbaseId") || "").trim();
     const availableFanbases = await getOrganizedFanbasesForUser(currentUser.uid);
     const fanbase = fanbaseId ? availableFanbases.find((item) => item.id === fanbaseId) : null;
+    const currentActivity = await getActivityDetails(id, activityId);
+    const availableFanbaseIds = new Set(availableFanbases.map((item) => item.id));
+
+    if (!currentActivity || (!currentIsAdmin && !availableFanbaseIds.has(currentActivity.fanbaseId))) {
+      throw new Error("No tenés permisos para editar este fanproject.");
+    }
 
     if (!titulo || !descripcion) {
       throw new Error("Completá el título y la descripción del fanproject.");
@@ -44,6 +58,10 @@ export default async function EditActivityPage({ params }) {
 
     if (fanbaseId && !fanbase) {
       throw new Error("Seleccioná una fanbase que administres.");
+    }
+
+    if (currentIsFanbase && !fanbase) {
+      throw new Error("El fanproject debe permanecer asociado a una fanbase que administres.");
     }
 
     const res = await updateFanProject(id, activityId, { titulo, descripcion, elementos, estado, instruccionesPorSector, fanbase });
@@ -163,7 +181,7 @@ export default async function EditActivityPage({ params }) {
             defaultValue={activity.fanbaseId || ""}
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           >
-            <option value="">Publicación personal</option>
+            {isAdmin ? <option value="">Publicación personal</option> : null}
             {fanbases.map((fanbase) => (
               <option key={fanbase.id} value={fanbase.id}>
                 {fanbase.name} · {fanbase.kpopGroup}

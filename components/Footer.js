@@ -18,9 +18,11 @@ export default function Footer() {
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-4 py-6 text-center text-sm sm:px-6 lg:px-8">
           <div className="min-w-0 text-[#823038]">
             <div className="flex items-center justify-center gap-2">
-              <img
+              <Image
                 src="/items/narabi_logo.png"
                 alt="Fanprojects"
+                height={32}
+                width={32}
                 className="h-8 w-8  object-cover"
               />
               <p className="font-semibold uppercase tracking-[0.14em]">

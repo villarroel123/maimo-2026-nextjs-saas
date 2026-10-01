@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import ThumbIcon from "@/components/icons/ThumbIcon";
-import VotingCommentsToggle from "@/components/votes/VotingCommentsToggle";
+import VotingReactionControls from "@/components/votes/VotingReactionControls";
 import { getVotingComments } from "@/lib/comments/voting-comments";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getConcertImage } from "@/lib/projects/concert-image";
@@ -9,7 +8,6 @@ import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 import {
   addVotingComment,
   castFanProjectVote,
-  toggleVotingReaction,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -193,49 +191,6 @@ function VotingComments({ comments, concert, user }) {
   );
 }
 
-function VotingReactionButton({ direction, projectId, user, userReaction }) {
-  const label = direction === "like" ? "Me gusta" : "No me gusta";
-  const isActive = userReaction === direction;
-  const className = `inline-flex size-7 items-center justify-center text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-    isActive
-      ? "text-[#FF9FD6]"
-      : "text-white hover:text-[#FF9FD6]"
-  }`;
-
-  if (!user) {
-    return (
-      <Link aria-label={label} className={className} href="/login?next=/votaciones" title={label}>
-        <ThumbIcon className="size-5" direction={direction === "dislike" ? "down" : "up"} />
-      </Link>
-    );
-  }
-
-  return (
-    <form action={toggleVotingReaction}>
-      <input name="projectId" type="hidden" value={projectId} />
-      <button aria-label={label} className={className} name="reaction" title={label} type="submit" value={direction}>
-        <ThumbIcon className="size-5" direction={direction === "dislike" ? "down" : "up"} />
-        <span className="sr-only">{label}</span>
-      </button>
-    </form>
-  );
-}
-
-function VotingReactionControls({ concert, user }) {
-  const commentCount = concert.comments.length;
-
-  return (
-    <div className="mt-auto flex items-center gap-2 pt-5">
-      <VotingReactionButton direction="like" projectId={concert.id} user={user} userReaction={concert.userReaction} />
-      {concert.reactionCounts?.like ? <span className="mr-2 text-xs font-semibold text-white/80">{concert.reactionCounts.like}</span> : null}
-      <VotingReactionButton direction="dislike" projectId={concert.id} user={user} userReaction={concert.userReaction} />
-      {concert.reactionCounts?.dislike ? <span className="mr-2 text-xs font-semibold text-white/80">{concert.reactionCounts.dislike}</span> : null}
-      <VotingCommentsToggle commentCount={commentCount} panelId={`comentarios-${concert.id}`} />
-      {commentCount ? <span className="text-xs font-semibold text-white/80">{commentCount}</span> : null}
-    </div>
-  );
-}
-
 export default async function VotingPage({ searchParams }) {
   const user = await getCurrentUser();
   const params = await searchParams;
@@ -376,7 +331,13 @@ export default async function VotingPage({ searchParams }) {
                     </form>
                   )}
 
-                    <VotingReactionControls concert={concert} user={user} />
+                    <VotingReactionControls
+                      commentCount={concert.comments.length}
+                      initialCounts={concert.reactionCounts}
+                      initialReaction={concert.userReaction}
+                      isSignedIn={Boolean(user)}
+                      projectId={concert.id}
+                    />
                   </div>
 
                   <div className="order-first lg:order-last">

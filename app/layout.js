@@ -33,10 +33,9 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const user = await getCurrentUser();
-  const [profile, hasUnreadNotifications] = await Promise.all([
-    user ? getCurrentUserProfile(user) : null,
-    user ? hasUnreadNotificationsForUser(user.uid) : false,
-  ]);
+  const profile = user ? await getCurrentUserProfile(user) : null;
+  const hasUnreadNotifications = user ? await hasUnreadNotificationsForUser(user.uid) : false;
+  const canAccessDashboard = profile?.user_type === "admin" || profile?.user_type === "fanbase";
 
   return (
     <html
@@ -44,8 +43,9 @@ export default async function RootLayout({ children }) {
       className={`${geistMono.variable} ${paytoneOne.variable} ${raleway.variable} dark`}
     >
       <body className="flex  flex-col  antialiased">
-        <FavoritesProvider>
+        <FavoritesProvider enabled={Boolean(user)}>
           <Navbar
+            canAccessDashboard={canAccessDashboard}
             hasUnreadNotifications={hasUnreadNotifications}
             profile={profile}
             user={user}

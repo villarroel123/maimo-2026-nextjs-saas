@@ -5,7 +5,6 @@ import { getCurrentUserProfile } from "@/lib/users/users";
 import { createFanProject, getProject } from "@/lib/projects/projects";
 import { FANPROJECT_STATUSES } from "@/lib/projects/fanproject-status";
 import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
-import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 import VenueInfo from "@/components/venues/VenueInfo";
 
@@ -17,17 +16,24 @@ export default async function NewActivityPage({ params }) {
   if (!user) redirect("/login");
 
   const profile = await getCurrentUserProfile(user);
-  if (profile?.user_type !== "admin") redirect("/dashboard");
+  const isAdmin = profile?.user_type === "admin";
+  const isFanbaseAccount = profile?.user_type === "fanbase";
+  if (!isAdmin && !isFanbaseAccount) redirect("/profile");
   const [fanbases, project] = await Promise.all([
     getOrganizedFanbasesForUser(user.uid),
     getProject(id),
   ]);
   if (!project) redirect("/dashboard/projects");
+  if (isFanbaseAccount && fanbases.length === 0) redirect("/dashboard/fanbases");
 
 async function handleCreateActivity(formData) {
     "use server";
-    const currentUser = await requireAdmin();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Unauthorized.");
     const currentProfile = await getCurrentUserProfile(currentUser);
+    const currentIsAdmin = currentProfile?.user_type === "admin";
+    const currentIsFanbase = currentProfile?.user_type === "fanbase";
+    if (!currentIsAdmin && !currentIsFanbase) throw new Error("Forbidden.");
     const titulo = String(formData.get("titulo") || "").trim();
     const descripcion = String(formData.get("descripcion") || "").trim();
     const elementos = String(formData.get("elementos") || "");
@@ -43,6 +49,10 @@ async function handleCreateActivity(formData) {
 
     if (fanbaseId && !fanbase) {
       throw new Error("Seleccioná una fanbase que administres.");
+    }
+
+    if (currentIsFanbase && !fanbase) {
+      throw new Error("Seleccioná la fanbase que publicará este fanproject.");
     }
 
     const res = await createFanProject(id, {
@@ -79,8 +89,8 @@ async function handleCreateActivity(formData) {
         <p className="font-semibold">Concierto: {project.Titulo}</p>
         <VenueInfo manualName={project.venueManualName || ""} placeId={project.venuePlaceId || ""} />
         <p className="mt-2 text-xs text-[#8A5468]">
-          Todos los fanprojects comparten el recinto del concierto. Podés cambiarlo desde
-          {" "}<Link className="font-semibold text-[#823038] underline" href={`/dashboard/projects/${id}/edit`}>Editar concierto</Link>.
+          Todos los fanprojects comparten el recinto del concierto.
+          {isAdmin ? <>{" "}Podés cambiarlo desde <Link className="font-semibold text-[#823038] underline" href={`/dashboard/projects/${id}/edit`}>Editar concierto</Link>.</> : null}
         </p>
       </div>
 
@@ -164,9 +174,10 @@ async function handleCreateActivity(formData) {
           <select
             id="fanbaseId"
             name="fanbaseId"
+            defaultValue={isFanbaseAccount ? fanbases[0]?.id || "" : ""}
             className="w-full bg-white border border-[#F2B8CF] rounded-lg px-4 py-2.5 text-[#5C1F3A] focus:outline-none focus:border-[#C0567A]"
           >
-            <option value="">Publicación personal</option>
+            {isAdmin ? <option value="">Publicación personal</option> : null}
             {fanbases.map((fanbase) => (
               <option key={fanbase.id} value={fanbase.id}>
                 {fanbase.name} · {fanbase.kpopGroup}
@@ -174,7 +185,7 @@ async function handleCreateActivity(formData) {
             ))}
           </select>
           <p className="mt-2 text-xs text-[#8A5468]">
-            Solo aparecen las fanbases en las que tu cuenta es fundadora u organizadora.
+            Solo aparecen las fanbases que administrás.
           </p>
         </div>
 

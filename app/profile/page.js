@@ -1,13 +1,19 @@
 import { revalidatePath } from "next/cache";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/dashboard/actions";
+import EditProfileButton from "@/components/profile/EditProfileButton";
 import PersonalAgenda from "@/components/profile/PersonalAgenda";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getFavoriteAgendaForUser } from "@/lib/favorites/favorites";
 import { updateEmailNotificationPreference } from "@/lib/notifications/notifications";
-import { getCurrentUserProfile } from "@/lib/users/users";
+import { getCurrentUserProfile, updateUserProfile } from "@/lib/users/users";
+import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
 
 export const dynamic = "force-dynamic";
+
+const MAX_NAME_LENGTH = 50;
+const MAX_PHOTO_LENGTH = 300000; // ~220 KB en base64, sobra para una imagen de 256x256
 
 function getProviderLabel(provider) {
   const labels = {
@@ -25,9 +31,10 @@ export default async function ProfilePage() {
     redirect("/login?next=/profile");
   }
 
-  const [profile, initialFavorites] = await Promise.all([
+  const [profile, initialFavorites, followedFanbases] = await Promise.all([
     getCurrentUserProfile(user),
     getFavoriteAgendaForUser(user.uid),
+    getFollowedFanbasesForUser(user.uid),
   ]);
   const displayName = profile?.displayName || user.name || user.email?.split("@")[0] || "Fan de Narabi";
   const avatarUrl = profile?.photoURL || user.picture || "";
@@ -48,6 +55,39 @@ export default async function ProfilePage() {
     revalidatePath("/profile");
   }
 
+  async function saveProfile(_previousState, formData) {
+    "use server";
+
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      redirect("/login?next=/profile");
+    }
+
+    const name = String(formData.get("displayName") || "").trim().slice(0, MAX_NAME_LENGTH);
+    const photo = String(formData.get("photoURL") || "");
+
+    if (!name) {
+      return { error: "El nombre no puede estar vacío." };
+    }
+
+    const isValidPhoto =
+      photo === "" ||
+      photo.startsWith("https://") ||
+      (photo.startsWith("data:image/jpeg;base64,") && photo.length < MAX_PHOTO_LENGTH);
+
+    if (!isValidPhoto) {
+      return { error: "La foto no es válida o es demasiado pesada." };
+    }
+
+    await updateUserProfile(currentUser.uid, { displayName: name, photoURL: photo });
+
+    // "layout" para que también se actualice el Navbar
+    revalidatePath("/", "layout");
+
+    return { ok: true };
+  }
+
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#823038]">
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
@@ -60,11 +100,14 @@ export default async function ProfilePage() {
         <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(15rem,0.7fr)_minmax(0,1.3fr)]">
           <article className="rounded-3xl border border-[#F2B8CF] bg-white p-6 text-center shadow-[0_12px_30px_rgba(130,48,56,0.06)]">
             {avatarUrl ? (
-              <img
+              <Image
                 alt={`Avatar de ${displayName}`}
                 className="mx-auto size-24 rounded-full border-4 border-[#FFE4F3] object-cover"
+                height={96}
                 referrerPolicy="no-referrer"
                 src={avatarUrl}
+                unoptimized
+                width={96}
               />
             ) : (
               <span className="mx-auto grid size-24 place-items-center rounded-full border-4 border-[#FFE4F3] bg-[#823038] text-3xl font-bold text-white">
@@ -76,7 +119,16 @@ export default async function ProfilePage() {
             <span className="mt-4 inline-flex rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold capitalize text-[#823038]">
               {profile?.user_type || "user"}
             </span>
-            <form action={logout} className="mt-5">
+
+            <div>
+              <EditProfileButton
+                avatarUrl={avatarUrl}
+                displayName={displayName}
+                saveAction={saveProfile}
+              />
+            </div>
+
+            <form action={logout} className="mt-3">
               <button className="rounded-full border border-[#823038] bg-white px-4 py-2 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" type="submit">
                 Cerrar sesión
               </button>
@@ -126,7 +178,10 @@ export default async function ProfilePage() {
           </article>
         </div>
 
-        <PersonalAgenda initialFavorites={initialFavorites} />
+        <PersonalAgenda
+          initialFavorites={initialFavorites}
+          followedFanbases={followedFanbases}
+        />
       </section>
     </main>
   );

@@ -1,13 +1,17 @@
 import Reveal from "@/components/Reveal";
+import Image from "next/image";
 
 export default function Hero() {
   return (
     <section className="relative flex min-h-[85vh] w-full flex-col items-center justify-center px-4 py-20 text-center text-zinc-100 sm:px-6 lg:px-8 overflow-hidden">
       
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src="/items/hero_one.jpg"
           alt="Hero background"
+          fill
+          priority
+          sizes="100vw"
           className="w-full h-full object-cover object-bottom"
         />
         

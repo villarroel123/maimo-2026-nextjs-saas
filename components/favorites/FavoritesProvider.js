@@ -1,59 +1,78 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getFavoriteKey } from "@/lib/favorites/favorite-key";
 
 const FavoritesContext = createContext(null);
 
-export function FavoritesProvider({ children }) {
+export function FavoritesProvider({ children, enabled = false }) {
   const [favorites, setFavorites] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const favoritesRef = useRef([]);
 
-  const loadFavorites = useCallback(async () => {
-    try {
-      const response = await fetch("/api/favorites", { cache: "no-store" });
-
-      if (response.status === 401) {
-        setFavorites([]);
-        return;
-      }
-
-      const payload = await response.json();
-
-      if (response.ok) {
-        setFavorites(payload.favorites || []);
-      }
-    } catch {
-      setFavorites([]);
-    } finally {
-      setIsLoading(false);
-    }
+  const updateFavorites = useCallback((nextFavorites) => {
+    favoritesRef.current = nextFavorites;
+    setFavorites(nextFavorites);
   }, []);
 
   useEffect(() => {
-    void loadFavorites();
-  }, [loadFavorites]);
+    if (!enabled) return;
+    let active = true;
+
+    fetch("/api/favorites", { cache: "no-store" })
+      .then(async (response) => ({ response, payload: await response.json().catch(() => ({})) }))
+      .then(({ response, payload }) => {
+        if (!active) return;
+        updateFavorites(response.ok ? payload.favorites || [] : []);
+      })
+      .catch(() => {
+        if (active) updateFavorites([]);
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [enabled, updateFavorites]);
 
   const toggleFavorite = useCallback(async (target) => {
-    const response = await fetch("/api/favorites", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "toggle", target }),
-    });
+    if (!enabled) return { requiresLogin: true };
 
-    const payload = await response.json().catch(() => ({}));
+    const previousFavorites = favoritesRef.current;
+    const targetKey = getFavoriteKey(target);
+    const wasFavorite = previousFavorites.some((favorite) => getFavoriteKey(favorite) === targetKey);
+    const optimisticFavorites = wasFavorite
+      ? previousFavorites.filter((favorite) => getFavoriteKey(favorite) !== targetKey)
+      : [...previousFavorites, target];
+    updateFavorites(optimisticFavorites);
 
-    if (response.status === 401) {
-      return { requiresLogin: true, error: payload.error };
+    try {
+      const response = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggle", target }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        updateFavorites(previousFavorites);
+        return { requiresLogin: true, error: payload.error };
+      }
+
+      if (!response.ok) {
+        updateFavorites(previousFavorites);
+        return { error: payload.error || "No se pudo actualizar el favorito." };
+      }
+
+      updateFavorites(payload.favorites || optimisticFavorites);
+      return { isFavorite: payload.isFavorite };
+    } catch {
+      updateFavorites(previousFavorites);
+      return { error: "No se pudo actualizar el favorito." };
     }
-
-    if (!response.ok) {
-      return { error: payload.error || "No se pudo actualizar el favorito." };
-    }
-
-    setFavorites(payload.favorites || []);
-    return { isFavorite: payload.isFavorite };
-  }, []);
+  }, [enabled, updateFavorites]);
 
   const favoriteKeys = useMemo(
     () => new Set(favorites.map((favorite) => getFavoriteKey(favorite))),

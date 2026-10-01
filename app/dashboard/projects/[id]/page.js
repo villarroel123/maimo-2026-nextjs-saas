@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getProjectWithDetails, deleteFanProject } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import DeleteActivityButton from "@/components/DeleteActivityButton";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { closeFanProjectVoting, getFanProjectVoteSummary } from "@/lib/votes/fanproject-votes";
@@ -18,16 +19,23 @@ export default async function AdminProjectDetailPage({ params }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const profile = await getCurrentUserProfile(user);
-  if (profile?.user_type !== "admin") redirect("/dashboard");
-
   const project = await getProjectWithDetails(id);
   if (!project) redirect("/dashboard");
+
+  const profile = await getCurrentUserProfile(user);
+  const isAdmin = profile?.user_type === "admin";
+  const isFanbaseAccount = profile?.user_type === "fanbase";
+  if (!isAdmin && !isFanbaseAccount) redirect("/profile");
+  const managedFanbases = isAdmin ? [] : await getOrganizedFanbasesForUser(user.uid);
+  const ownedFanbaseIds = new Set(managedFanbases.map((fanbase) => fanbase.id));
+  const canManageVoting = isAdmin || ownedFanbaseIds.has(project.fanbaseId) || project.subitems?.some((activity) => ownedFanbaseIds.has(activity.fanbaseId));
+  const canCreateFanproject = isAdmin || (isFanbaseAccount && ownedFanbaseIds.size > 0);
 
   const votingSummary = await getFanProjectVoteSummary(project);
 
   async function handleDeleteActivity(formData) {
     "use server";
+    await requireAdmin();
     const projId = formData.get("projectId");
     const actId = formData.get("activityId");
     await deleteFanProject(projId, actId);
@@ -37,7 +45,21 @@ export default async function AdminProjectDetailPage({ params }) {
   async function handleCloseVote(formData) {
     "use server";
 
-    await requireAdmin();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Unauthorized.");
+    const currentProfile = await getCurrentUserProfile(currentUser);
+    const currentIsAdmin = currentProfile?.user_type === "admin";
+    const currentIsFanbase = currentProfile?.user_type === "fanbase";
+    if (!currentIsAdmin && !currentIsFanbase) throw new Error("No tenés permisos para cerrar esta votación.");
+    let currentCanManageVoting = currentIsAdmin;
+
+    if (!currentCanManageVoting) {
+      const currentManagedFanbases = await getOrganizedFanbasesForUser(currentUser.uid);
+      const currentOwnedIds = new Set(currentManagedFanbases.map((fanbase) => fanbase.id));
+      currentCanManageVoting = currentOwnedIds.has(project.fanbaseId) || project.subitems?.some((activity) => currentOwnedIds.has(activity.fanbaseId));
+    }
+
+    if (!currentCanManageVoting) throw new Error("No tenés permisos para cerrar esta votación.");
     const projectId = String(formData.get("projectId") || "").trim();
     const fanprojectId = String(formData.get("fanprojectId") || "").trim();
 
@@ -69,14 +91,16 @@ export default async function AdminProjectDetailPage({ params }) {
       <div className="mb-6 flex justify-between items-center">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#C0567A] hover:underline">
           <CircleArrowIcon direction="left" className="size-4" />
-          Volver al Dashboard
+          Volver a dashboard
         </Link>
-        <Link
-          href={`/dashboard/projects/${project.id}/activities/new`}
-          className="text-xs bg-[#5C1F3A] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#7a2a4d] transition"
-        >
-          + Nueva Actividad
-        </Link>
+        {canCreateFanproject ? (
+          <Link
+            href={`/dashboard/projects/${project.id}/activities/new`}
+            className="text-xs bg-[#5C1F3A] text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#7a2a4d] transition"
+          >
+            + Nuevo fanproject
+          </Link>
+        ) : null}
       </div>
 
       {/* Tarjeta principal del Concierto con su respectivo botón de Editar Proyecto */}
@@ -87,12 +111,14 @@ export default async function AdminProjectDetailPage({ params }) {
           </span>
           <h1 className="text-3xl font-bold text-[#5C1F3A] mt-2">{project.Titulo}</h1>
         </div>
-        <Link
-          href={`/dashboard/projects/${project.id}/edit`}
-          className="text-xs bg-white hover:bg-[#f9d4e6] text-[#5C1F3A] px-3 py-2 rounded-lg transition font-medium border border-[#F2B8CF] shrink-0"
-        >
-          Editar Concierto
-        </Link>
+        {isAdmin ? (
+          <Link
+            href={`/dashboard/projects/${project.id}/edit`}
+            className="text-xs bg-white hover:bg-[#f9d4e6] text-[#5C1F3A] px-3 py-2 rounded-lg transition font-medium border border-[#F2B8CF] shrink-0"
+          >
+            Editar Concierto
+          </Link>
+        ) : null}
       </div>
 
       <div className="mb-4">
@@ -130,7 +156,7 @@ export default async function AdminProjectDetailPage({ params }) {
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                     <div className="h-full rounded-full bg-[#C0567A]" style={{ width: `${percentage}%` }} />
                   </div>
-                  <form action={handleCloseVote} className="mt-4">
+                  {canManageVoting ? <form action={handleCloseVote} className="mt-4">
                     <input name="projectId" type="hidden" value={project.id} />
                     <input name="fanprojectId" type="hidden" value={candidate.id} />
                     <button
@@ -139,7 +165,7 @@ export default async function AdminProjectDetailPage({ params }) {
                     >
                       Confirmar ganador y cerrar votación
                     </button>
-                  </form>
+                  </form> : null}
                 </div>
               );
             })}
@@ -169,22 +195,23 @@ export default async function AdminProjectDetailPage({ params }) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-               
-                <Link
-                  href={`/dashboard/projects/${project.id}/activities/${activity.id}/edit`}
-                  className="text-xs bg-white hover:bg-[#f9d4e6] text-[#5C1F3A] px-3 py-1.5 rounded-lg transition font-medium border border-[#F2B8CF]"
-                >
-                  Editar
-                </Link>
+              {isAdmin || ownedFanbaseIds.has(activity.fanbaseId) ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/dashboard/projects/${project.id}/activities/${activity.id}/edit`}
+                    className="text-xs bg-white hover:bg-[#f9d4e6] text-[#5C1F3A] px-3 py-1.5 rounded-lg transition font-medium border border-[#F2B8CF]"
+                  >
+                    Editar
+                  </Link>
 
-                <DeleteActivityButton 
-                  projectId={project.id}
-                  activityId={activity.id}
-                  activityTitle={activity.titulo}
-                  deleteAction={handleDeleteActivity}
-                />
-              </div>
+                  {isAdmin ? <DeleteActivityButton
+                    projectId={project.id}
+                    activityId={activity.id}
+                    activityTitle={activity.titulo}
+                    deleteAction={handleDeleteActivity}
+                  /> : null}
+                </div>
+              ) : null}
             </div>
             );
           })

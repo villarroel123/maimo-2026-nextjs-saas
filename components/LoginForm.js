@@ -42,7 +42,7 @@ export default function LoginForm() {
     setLoadingMessage("Creando sesion segura...");
     await persistSession(userCredential.user);
 
-    setLoadingMessage("Redirigiendo al dashboard...");
+    setLoadingMessage("Abriendo tu cuenta...");
     router.push(nextUrl);
     router.refresh();
   }
