@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import CommentIcon from "@/components/icons/CommentIcon";
+import LoginRequiredPopup from "@/components/votes/LoginRequiredPopup";
 
-export default function VotingCommentsToggle({ commentCount, panelId }) {
+export default function VotingCommentsToggle({ commentCount, panelId, isSignedIn }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  if (!isSignedIn) {
+    return (
+      <LoginRequiredPopup className="inline-flex size-7 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" label="Iniciá sesión para comentar">
+        <CommentIcon color="#FFFFFF" />
+        <span className="sr-only">Iniciá sesión para comentar</span>
+      </LoginRequiredPopup>
+    );
+  }
 
   function toggleComments() {
     const panel = document.getElementById(panelId);

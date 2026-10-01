@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRef, useState } from "react";
 import { toggleVotingReactionInstant } from "@/app/votaciones/actions";
+import LoginRequiredPopup from "@/components/votes/LoginRequiredPopup";
 import ThumbIcon from "@/components/icons/ThumbIcon";
 import VotingCommentsToggle from "@/components/votes/VotingCommentsToggle";
 
@@ -12,7 +12,7 @@ function ReactionButton({ active, direction, disabled, isSignedIn, onReact }) {
   const icon = <ThumbIcon className="size-5" direction={direction === "dislike" ? "down" : "up"} />;
 
   if (!isSignedIn) {
-    return <Link aria-label={label} className={className} href="/login?next=/votaciones" title={label}>{icon}</Link>;
+    return <LoginRequiredPopup className={className} label={label}>{icon}<span className="sr-only">{label}</span></LoginRequiredPopup>;
   }
 
   return <button aria-label={label} aria-pressed={active} className={className} disabled={disabled} onClick={() => onReact(direction)} title={label} type="button">{icon}<span className="sr-only">{label}</span></button>;
@@ -56,7 +56,7 @@ export default function VotingReactionControls({ commentCount, initialCounts, in
       {counts.like ? <span className="mr-2 text-xs font-semibold text-white/80">{counts.like}</span> : null}
       <ReactionButton active={reaction === "dislike"} direction="dislike" disabled={isPending} isSignedIn={isSignedIn} onReact={handleReaction} />
       {counts.dislike ? <span className="mr-2 text-xs font-semibold text-white/80">{counts.dislike}</span> : null}
-      <VotingCommentsToggle commentCount={commentCount} panelId={`comentarios-${projectId}`} />
+      <VotingCommentsToggle commentCount={commentCount} isSignedIn={isSignedIn} panelId={`comentarios-${projectId}`} />
       {commentCount ? <span className="text-xs font-semibold text-white/80">{commentCount}</span> : null}
     </div>
   );

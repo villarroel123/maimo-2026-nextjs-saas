@@ -107,8 +107,9 @@ export default async function FanbaseDetailPage({ params }) {
 
   const mayManagePosts = canManagePosts(profile, id);
   const mayEditPosts = canEditPosts(profile, id);
+  const isAdmin = profile?.user_type === "admin";
   const [members, membershipRequests, membershipRequest, followerCount, projects, posts, isFollowing] = await Promise.all([
-    mayManagePosts ? getFanbaseMembers(id) : Promise.resolve([]),
+    isAdmin ? getFanbaseMembers(id) : Promise.resolve([]),
     mayManagePosts ? getFanbaseMembershipRequests(id) : Promise.resolve([]),
     currentUser && !membership && !mayManagePosts ? getFanbaseMembershipRequest(id, currentUser.uid) : null,
     getFanbaseFollowerCount(id),
@@ -297,14 +298,14 @@ export default async function FanbaseDetailPage({ params }) {
           </div>
         </section>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)]">
+        <div className={`mt-8 grid gap-8 ${isAdmin ? "lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)]" : ""}`}>
           <section>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Creaciones de la comunidad</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#5C1F3A]">Fanprojects organizados</h2>
             {fanprojects.length === 0 ? (
               <p className="mt-5 rounded-2xl border border-dashed border-[#EAB0C8] bg-white p-5 text-sm text-[#8A5468]">Esta fanbase todavía no publicó fanprojects.</p>
             ) : (
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="mt-5 grid gap-4 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))]">
                 {fanprojects.map((fanproject) => (
                   <Link className="group overflow-hidden rounded-2xl border border-[#F2B8CF] bg-white transition hover:-translate-y-1 hover:border-[#D985A5]" href={`/projects/${fanproject.project.id}/activities/${fanproject.id}`} key={`${fanproject.project.id}-${fanproject.id}`}>
                     <div className="relative h-32 overflow-hidden bg-[#FFE4F3]">
@@ -321,7 +322,7 @@ export default async function FanbaseDetailPage({ params }) {
             )}
           </section>
 
-          <aside className="rounded-3xl border border-[#F2B8CF] bg-white p-5 sm:p-6">
+          {isAdmin ? <aside className="rounded-3xl border border-[#F2B8CF] bg-white p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">Equipo</p>
             <h2 className="mt-2 text-xl font-semibold text-[#5C1F3A]">Integrantes</h2>
             {mayManagePosts ? (
@@ -372,7 +373,7 @@ export default async function FanbaseDetailPage({ params }) {
                 La lista de integrantes y los permisos son información privada para administradores de la fanbase.
               </p>
             )}
-          </aside>
+          </aside> : null}
         </div>
 
         <FanbasePostsDisplay count={posts.length} composer={mayManagePosts ? (

@@ -1,8 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import VotingReactionControls from "@/components/votes/VotingReactionControls";
+import LoginRequiredPopup from "@/components/votes/LoginRequiredPopup";
 import { getVotingComments } from "@/lib/comments/voting-comments";
 import { getCurrentUser } from "@/lib/firebase/session";
+import { getCurrentUserProfile } from "@/lib/users/users";
+import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
+import { redirect } from "next/navigation";
 import { getConcertImage } from "@/lib/projects/concert-image";
 import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 import {
@@ -16,6 +20,7 @@ function getStatusMessage(status) {
   const messages = {
     voted: "Tu voto fue registrado. Ya podés seguir el resultado de esta votación.",
     "already-voted": "Ya habías votado en este concierto. Cada cuenta puede votar una sola vez.",
+    "fanbase-required": "Solo podés votar en propuestas de las fanbases que seguís.",
     invalid: "Elegí un fanproject válido para votar.",
     unavailable: "No se pudo registrar el voto porque la votación ya no está disponible.",
     commented: "Tu comentario fue publicado.",
@@ -196,13 +201,38 @@ export default async function VotingPage({ searchParams }) {
   const params = await searchParams;
   const status = params?.status;
   const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
-  const votingConcerts = await getFanProjectVotingConcerts(user?.uid);
+  const selectedGroup = typeof params?.group === "string" ? params.group.trim() : "";
+  let followedFanbases = [];
+  if (user) {
+    const profile = await getCurrentUserProfile(user);
+    if (profile?.user_type === "user") {
+      followedFanbases = await getFollowedFanbasesForUser(user.uid);
+      if (followedFanbases.length === 0) {
+        redirect(`/onboarding/fanbases?next=${encodeURIComponent("/votaciones")}`);
+      }
+    }
+  }
+  const allVotingConcerts = await getFanProjectVotingConcerts(user?.uid);
+  const followedIds = new Set(followedFanbases.map((fanbase) => fanbase.id));
+  const votingConcerts = user && followedFanbases.length
+    ? allVotingConcerts.flatMap((concert) => {
+      const candidates = concert.candidates.filter((candidate) => followedIds.has(candidate.fanbaseId));
+      if (!candidates.length) return [];
+      const visibleVoteCount = candidates.reduce((total, candidate) => total + candidate.votes, 0);
+      return [{ ...concert, candidates, totalVotes: visibleVoteCount }];
+    })
+    : allVotingConcerts;
   const normalizedQuery = normalizeSearchValue(query);
-  const matchingConcerts = normalizedQuery
+  const matchingConcerts = (normalizedQuery
     ? votingConcerts.filter((concert) => matchesConcertSearch(concert, normalizedQuery))
-    : votingConcerts;
+    : votingConcerts).filter((concert) => !selectedGroup || getConcertGroupName(concert) === selectedGroup);
   const concerts = await getConcertsWithComments(matchingConcerts);
   const concertGroups = groupConcerts(concerts);
+  const availableGroups = [...new Set(votingConcerts.map(getConcertGroupName))]
+    .sort((first, second) => first.localeCompare(second, "es"));
+  const groupedConcerts = concertGroups.flatMap((group) =>
+    group.concerts.map((concert) => ({ group, concert })),
+  );
   const statusMessage = getStatusMessage(status);
 
   return (
@@ -230,7 +260,19 @@ export default async function VotingPage({ searchParams }) {
           </div>
         ) : null}
 
-        <div className="mt-10 space-y-10">
+        <form action="/votaciones" className="mx-auto mt-8 flex max-w-5xl flex-wrap items-end gap-3">
+          <div className="min-w-52 flex-1">
+            <label className="mb-1.5 block text-sm font-medium text-[#754B5B]" htmlFor="voting-group">Ver votaciones de</label>
+            <select className="w-full rounded-xl border border-[#E9C8D5] bg-white px-3 py-2.5 text-sm text-[#5C1F3A] outline-none focus:border-[#C0567A] focus:ring-2 focus:ring-[#F5D5E2]" defaultValue={selectedGroup} id="voting-group" name="group">
+              <option value="">Todos los grupos</option>
+              {availableGroups.map((group) => <option key={group} value={group}>{group}</option>)}
+            </select>
+          </div>
+          <button className="rounded-xl bg-[#823038] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5C1F3A]" type="submit">Filtrar</button>
+          {selectedGroup ? <Link className="px-2 py-2.5 text-sm font-medium text-[#823038] hover:underline" href="/votaciones">Quitar filtro</Link> : null}
+        </form>
+
+        <div className="mt-6 space-y-10">
           {concerts.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[#E9A8C2] bg-[#FFF7FB] px-6 py-12 text-center">
               <p className="text-lg font-semibold text-[#5C1F3A]">
@@ -245,31 +287,27 @@ export default async function VotingPage({ searchParams }) {
                 {votingConcerts.length ? "Ver todas las votaciones" : "Ver conciertos"}
               </Link>
             </div>
-          ) : concertGroups.map((group) => (
-            <section className="scroll-mt-24" id={group.anchor} key={group.anchor}>
-              <div className="mx-auto mb-5 w-full max-w-5xl">
-                <h2 className="text-2xl font-semibold text-[#5C1F3A] sm:text-3xl">{group.name}</h2>
-              </div>
-              <div className="space-y-6">
-                {group.concerts.map((concert) => {
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2">
+              {groupedConcerts.map(({ group, concert }) => {
             const selectedFanProject = concert.candidates.find((candidate) => candidate.id === concert.userVote);
             const concertImage = getConcertImage(concert);
 
             return (
               <article
                 id={`votacion-${concert.id}`}
-                className="mx-auto w-full max-w-5xl scroll-mt-6 overflow-hidden rounded-2xl bg-[#823038] text-white shadow-[0_16px_36px_rgba(92,31,58,0.16)]"
+                className="w-full scroll-mt-6 overflow-hidden rounded-2xl border border-[#F3DCE5] bg-[#FFF7FA] text-[#5C1F3A] shadow-[0_12px_28px_rgba(92,31,58,0.08)]"
                 key={concert.id}
               >
-                <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,35%)] lg:gap-8">
+                <div className="flex flex-col gap-4 p-4 sm:p-5">
                   <div className="flex min-w-0 flex-col">
-                    <p className="text-sm font-medium text-white/80">Concierto de {group.name}</p>
+                    <p className="text-sm font-medium text-[#9B697A]">Concierto de {group.name}</p>
                     <h3 className="mt-1 text-2xl font-semibold leading-tight sm:text-3xl">Elegí un fanproject</h3>
-                    <p className="mt-2 text-sm text-white/75">
+                    <p className="mt-2 text-sm text-[#754B5B]">
                       {typeof concert.Titulo === "string" && concert.Titulo.toLocaleLowerCase("es") !== group.name.toLocaleLowerCase("es") ? `${concert.Titulo} · ` : ""}
                       {concert.Pais || "Lugar a confirmar"} · {concert["Dia del concierto"] || "Fecha a confirmar"}
                     </p>
-                    <p className="mt-3 text-sm font-semibold text-white/90">
+                    <p className="mt-3 text-sm font-semibold text-[#823038]">
                       {concert.totalVotes} {concert.totalVotes === 1 ? "voto" : "votos"} · {concert.candidates.length} propuesta{concert.candidates.length === 1 ? "" : "s"}
                     </p>
 
@@ -277,21 +315,18 @@ export default async function VotingPage({ searchParams }) {
                     <div className="mt-6">
                       <div className="space-y-2">
                         {concert.candidates.map((candidate) => (
-                          <div className="rounded-lg bg-white/90 px-4 py-3 text-sm font-semibold text-[#5C1F3A]" key={candidate.id}>
+                          <LoginRequiredPopup className="w-full rounded-lg bg-white/90 px-4 py-3 text-left text-sm font-semibold text-[#5C1F3A]" key={candidate.id}>
                             {candidate.titulo}
-                          </div>
+                          </LoginRequiredPopup>
                         ))}
                       </div>
                       <div className="mt-4 flex flex-wrap items-center gap-3">
-                        <p className="text-sm text-white/85">Iniciá sesión para elegir una propuesta.</p>
-                        <Link className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" href="/login?next=/votaciones">
-                          Iniciar sesión
-                        </Link>
+                        <p className="text-sm text-white/85">Elegí una propuesta para iniciar sesión y votar.</p>
                       </div>
                     </div>
                   ) : selectedFanProject ? (
                     <div className="mt-6">
-                      <p className="mb-3 text-sm font-semibold text-white/90">
+                      <p className="mb-3 text-sm font-semibold text-[#754B5B]">
                         Votaste por {selectedFanProject.titulo}. Estos son los resultados actuales.
                       </p>
                       <div className="space-y-2">
@@ -325,7 +360,7 @@ export default async function VotingPage({ searchParams }) {
                           ))}
                         </div>
                       </fieldset>
-                      <button className="mt-4 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#823038] transition hover:bg-[#FFE4F3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" type="submit">
+                      <button className="mt-4 rounded-full bg-[#823038] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0567A]" type="submit">
                         Confirmar voto
                       </button>
                     </form>
@@ -343,7 +378,7 @@ export default async function VotingPage({ searchParams }) {
                   <div className="order-first lg:order-last">
                     <Link
                       aria-label={`Ver concierto de ${group.name}`}
-                      className="group relative block aspect-square w-full overflow-hidden rounded-xl bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className="group relative block aspect-[16/7] w-full overflow-hidden rounded-xl bg-[#5C1F3A] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                       href={`/projects/${concert.id}`}
                     >
                       <Image
@@ -351,7 +386,7 @@ export default async function VotingPage({ searchParams }) {
                         aria-hidden="true"
                         className="scale-110 object-cover opacity-60 blur-lg"
                         fill
-                        sizes="(min-width: 1024px) 35vw, 100vw"
+                        sizes="(min-width: 768px) 45vw, 100vw"
                         src={concertImage}
                         unoptimized={/^https?:\/\//i.test(concertImage)}
                       />
@@ -359,7 +394,7 @@ export default async function VotingPage({ searchParams }) {
                         alt={`Concierto de ${group.name}`}
                         className="object-contain"
                         fill
-                        sizes="(min-width: 1024px) 35vw, 100vw"
+                        sizes="(min-width: 768px) 45vw, 100vw"
                         src={concertImage}
                         unoptimized={/^https?:\/\//i.test(concertImage)}
                       />
@@ -373,10 +408,9 @@ export default async function VotingPage({ searchParams }) {
                 <VotingComments comments={concert.comments} concert={concert} user={user} />
               </article>
             );
-                })}
-              </div>
-            </section>
-          ))}
+              })}
+            </div>
+          )}
         </div>
       </section>
     </main>
