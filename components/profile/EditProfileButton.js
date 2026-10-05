@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 export default function EditProfileButton({
   avatarUrl,
@@ -8,9 +8,16 @@ export default function EditProfileButton({
   saveAction,
 }) {
   const [state, formAction, pending] = useActionState(saveAction, null);
+  const detailsRef = useRef(null);
+
+  useEffect(() => {
+    if (state?.ok && detailsRef.current) {
+      detailsRef.current.open = false;
+    }
+  }, [state]);
 
   return (
-    <details className="mt-5 text-left">
+    <details className="mt-5 text-left" ref={detailsRef}>
       <summary className="mx-auto w-fit cursor-pointer list-none rounded-full bg-[#823038] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5C1F3A] [&::-webkit-details-marker]:hidden">
         Editar perfil
       </summary>

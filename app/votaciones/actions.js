@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createVotingComment } from "@/lib/comments/voting-comments";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
+import { getProjectWithDetails } from "@/lib/projects/projects";
 import {
   submitFanProjectVote,
   toggleFanProjectVotingReaction,
@@ -27,6 +29,15 @@ export async function castFanProjectVote(formData) {
 
   if (!projectId || !fanprojectId) {
     redirect("/votaciones?status=invalid");
+  }
+
+  const [project, followedFanbases] = await Promise.all([
+    getProjectWithDetails(projectId),
+    getFollowedFanbasesForUser(user.uid),
+  ]);
+  const selectedFanProject = project?.subitems?.find((item) => item.id === fanprojectId);
+  if (!selectedFanProject || !followedFanbases.some((fanbase) => fanbase.id === selectedFanProject.fanbaseId)) {
+    redirect("/votaciones?status=fanbase-required");
   }
 
   try {

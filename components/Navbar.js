@@ -185,7 +185,7 @@ export default function Navbar({
     window.addEventListener("scroll", updateScrollState, { passive: true });
 
     return () => window.removeEventListener("scroll", updateScrollState);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (isSearchOpen) searchInputRef.current?.focus();
@@ -220,11 +220,11 @@ export default function Navbar({
           : "border-[#823038] bg-[#823038]/95"
       }`}
     >
-      <div className={`mx-auto w-full ${pathname === "/" ? "max-w-7xl px-6 sm:px-10 lg:px-14 xl:px-16" : "max-w-6xl px-4 sm:px-6 lg:px-8"}`}>
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Altura fija: 56px en mobile, 66px en xl, con o sin search abierto */}
         <div className="flex h-14 items-center justify-between gap-3 py-2 xl:h-[66px]">
           <Link
-            className={`group shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038] ${isSearchOpen ? "hidden xl:flex" : "flex"}`}
+            className={`group shrink-0 items-center gap-2.5 rounded-full pr-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#823038] ${isSearchOpen ? "hidden lg:flex" : "flex"}`}
             href="/"
             onClick={() => { closeMenu(); closeSearch(); }}
           >
@@ -248,7 +248,7 @@ export default function Navbar({
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
             {!isSearchOpen ? (
-              <div className="hidden xl:flex">
+              <div className="hidden lg:flex">
                 <DesktopLinks isScrolled={isScrolled} links={links} pathname={pathname} />
               </div>
             ) : null}
@@ -266,7 +266,7 @@ export default function Navbar({
                 role="search"
               >
                 <label className="sr-only" htmlFor="navbar-search">Buscar en Narabi</label>
-                <div className={`flex h-10 min-w-0 flex-1 items-center rounded-full border bg-[#FDFDFF]/10 focus-within:ring-2 xl:h-[50px] ${isScrolled ? "border-[#823038]/35 text-[#823038] focus-within:ring-[#823038]/30" : "border-[#FDFDFF]/50 text-[#FDFDFF] focus-within:ring-[#FDFDFF]/35"}`}>
+                <div className={`flex h-10 min-w-0 flex-1 items-center rounded-full border bg-[#FDFDFF]/10 focus-within:ring-2 lg:h-[50px] ${isScrolled ? "border-[#823038]/35 text-[#823038] focus-within:ring-[#823038]/30" : "border-[#FDFDFF]/50 text-[#FDFDFF] focus-within:ring-[#FDFDFF]/35"}`}>
                   <input
                     autoComplete="off"
                     className={`h-full min-w-0 flex-1 bg-transparent px-4 text-sm outline-none ${isScrolled ? "placeholder:text-[#823038]/60" : "placeholder:text-[#FDFDFF]/70"}`}
@@ -299,7 +299,7 @@ export default function Navbar({
               </div>
             )}
 
-            <div className="hidden shrink-0 xl:flex">
+            <div className="hidden shrink-0 lg:flex">
               <DesktopAccount
                 avatarUrl={avatarUrl}
                 displayName={displayName}
@@ -310,7 +310,7 @@ export default function Navbar({
             </div>
 
             {!isSearchOpen ? (
-              <div className="flex items-center gap-2 xl:hidden">
+              <div className="flex items-center gap-2 lg:hidden">
                 {user ? (
                   <ProfileLink
                     avatarUrl={avatarUrl}
@@ -347,7 +347,7 @@ export default function Navbar({
         </div>
 
         <div
-          className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 xl:hidden ${
+          className={`grid overflow-hidden transition-[grid-template-rows,padding] duration-300 lg:hidden ${
             isOpen
               ? "grid-rows-[1fr] pb-4"
               : "grid-rows-[0fr] pb-0"

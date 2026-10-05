@@ -28,7 +28,10 @@ async function persistSession(user) {
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get("next") || "/dashboard";
+  const requestedNext = searchParams.get("next") || "/profile";
+  const nextUrl = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/\\")
+    ? requestedNext
+    : "/dashboard";
 
   const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
@@ -43,7 +46,7 @@ export default function LoginForm() {
     await persistSession(userCredential.user);
 
     setLoadingMessage("Abriendo tu cuenta...");
-    router.push(nextUrl);
+    router.push(`/onboarding/fanbases?next=${encodeURIComponent(nextUrl)}`);
     router.refresh();
   }
 

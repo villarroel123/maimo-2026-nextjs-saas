@@ -3,6 +3,7 @@ import { Homemade_Apple, Chiron_GoRound_TC } from "next/font/google";
 import LoginForm from "@/components/LoginForm";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +18,20 @@ const chironGoRoundTC = Chiron_GoRound_TC({
   weight: "400",
 });
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }) {
   const user = await getCurrentUser();
+  const params = await searchParams;
+  const requestedNext = typeof params?.next === "string" ? params.next : "/profile";
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.startsWith("/\\") ? requestedNext : "/profile";
 
   if (user) {
-    const profile = await getCurrentUserProfile(user);
-    redirect(profile?.user_type === "admin" || profile?.user_type === "fanbase" ? "/dashboard" : "/profile");
+    const [profile, followedFanbases] = await Promise.all([
+      getCurrentUserProfile(user),
+      getFollowedFanbasesForUser(user.uid),
+    ]);
+    if (profile?.user_type === "admin" || profile?.user_type === "fanbase") redirect("/dashboard");
+    if (followedFanbases.length === 0) redirect(`/onboarding/fanbases?next=${encodeURIComponent(next)}`);
+    redirect(next);
   }
 
   return (
