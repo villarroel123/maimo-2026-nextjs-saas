@@ -9,7 +9,6 @@ import DeleteActivityButton from "@/components/DeleteActivityButton";
 import { getFanProjectStatus } from "@/lib/projects/fanproject-status";
 import { closeFanProjectVoting, getFanProjectVoteSummary } from "@/lib/votes/fanproject-votes";
 import { notifyFavoriteUsers } from "@/lib/notifications/notifications";
-import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 
 export const dynamic = "force-dynamic";
@@ -35,9 +34,18 @@ export default async function AdminProjectDetailPage({ params }) {
 
   async function handleDeleteActivity(formData) {
     "use server";
-    await requireAdmin();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Unauthorized.");
+    const currentProfile = await getCurrentUserProfile(currentUser);
     const projId = formData.get("projectId");
     const actId = formData.get("activityId");
+    if (currentProfile?.user_type !== "admin") {
+      const managed = await getOrganizedFanbasesForUser(currentUser.uid);
+      const activity = project.subitems?.find((item) => item.id === actId);
+      if (!managed.some((fanbase) => fanbase.id === activity?.fanbaseId)) {
+        throw new Error("No tenés permisos para eliminar este fanproject.");
+      }
+    }
     await deleteFanProject(projId, actId);
     redirect(`/dashboard/projects/${projId}`);
   }

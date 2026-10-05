@@ -1,16 +1,66 @@
 import Link from "next/link";
 import Image from "next/image";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import VotingReactionControls from "@/components/votes/VotingReactionControls";
 import { getVotingComments } from "@/lib/comments/voting-comments";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getConcertImage } from "@/lib/projects/concert-image";
-import { getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
+import { deleteFanProject, getProjectWithDetails } from "@/lib/projects/projects";
+import { getCurrentUserProfile } from "@/lib/users/users";
+import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
+import { requireFanbaseAdmin } from "@/lib/users/authorization";
+import { closeFanProjectVoting, getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 import {
   addVotingComment,
   castFanProjectVote,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+async function manageVotingAction(formData, intent) {
+  "use server";
+
+  const fanbaseId = String(formData.get("fanbaseId") || "").trim();
+  const projectId = String(formData.get("projectId") || "").trim();
+  const fanprojectId = String(formData.get("fanprojectId") || "").trim();
+  const user = await requireFanbaseAdmin(fanbaseId);
+  const project = await getProjectWithDetails(projectId);
+  const activity = project?.subitems?.find((item) => item.id === fanprojectId);
+
+  if (!project || !activity) throw new Error("La propuesta seleccionada no es válida.");
+
+  const profile = await getCurrentUserProfile(user);
+  if (profile?.user_type !== "admin") {
+    const managed = await getOrganizedFanbasesForUser(user.uid);
+    if (!managed.some((fanbase) => fanbase.id === activity.fanbaseId)) {
+      throw new Error("No tenés permisos para gestionar esta propuesta.");
+    }
+  }
+
+  if (intent === "delete") {
+    await deleteFanProject(projectId, fanprojectId);
+  } else if (intent === "close") {
+    await closeFanProjectVoting({ projectId, fanprojectId });
+  } else {
+    throw new Error("La acción seleccionada no es válida.");
+  }
+
+  revalidatePath("/votaciones");
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  redirect("/votaciones");
+}
+
+async function deleteVotingProposal(formData) {
+  "use server";
+  return manageVotingAction(formData, "delete");
+}
+
+async function closeVotingProposal(formData) {
+  "use server";
+  return manageVotingAction(formData, "close");
+}
 
 function getStatusMessage(status) {
   const messages = {
@@ -193,10 +243,23 @@ function VotingComments({ comments, concert, user }) {
 
 export default async function VotingPage({ searchParams }) {
   const user = await getCurrentUser();
+  const profile = user ? await getCurrentUserProfile(user) : null;
+  const isAdmin = profile?.user_type === "admin";
+  const managedFanbases = user && profile?.user_type === "fanbase"
+    ? await getOrganizedFanbasesForUser(user.uid)
+    : [];
+  const managedFanbaseIds = new Set(managedFanbases.map((fanbase) => fanbase.id));
+  const isFanbaseManager = profile?.user_type === "fanbase" && managedFanbaseIds.size > 0;
   const params = await searchParams;
   const status = params?.status;
   const query = typeof params?.q === "string" ? params.q.trim().slice(0, 100) : "";
-  const votingConcerts = await getFanProjectVotingConcerts(user?.uid);
+  const allVotingConcerts = await getFanProjectVotingConcerts(user?.uid);
+  const votingConcerts = isFanbaseManager
+    ? allVotingConcerts.map((concert) => ({
+      ...concert,
+      candidates: concert.candidates.filter((candidate) => managedFanbaseIds.has(candidate.fanbaseId)),
+    })).filter((concert) => concert.candidates.length > 0)
+    : allVotingConcerts;
   const normalizedQuery = normalizeSearchValue(query);
   const matchingConcerts = normalizedQuery
     ? votingConcerts.filter((concert) => matchesConcertSearch(concert, normalizedQuery))
@@ -218,6 +281,9 @@ export default async function VotingPage({ searchParams }) {
           <p className="mt-5 text-sm font-medium text-[#823038]">
             {votingConcerts.length} votación{votingConcerts.length === 1 ? " activa" : "es activas"} · 1 voto por concierto
           </p>
+          {isFanbaseManager ? (
+            <p className="mt-2 text-xs text-[#8A5468]">Mostrando únicamente las votaciones de tus fanbases.</p>
+          ) : null}
         </div>
 
         {statusMessage ? (
@@ -338,6 +404,29 @@ export default async function VotingPage({ searchParams }) {
                       isSignedIn={Boolean(user)}
                       projectId={concert.id}
                     />
+                    {(isAdmin || isFanbaseManager) ? (
+                      <div className="mt-4 rounded-xl border border-white/20 bg-white/10 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-white">Gestionar votación</p>
+                          <Link className="text-xs font-semibold text-white underline underline-offset-2 hover:text-[#FFE4F3]" href={`/dashboard/projects/${concert.id}/activities/new`}>Crear propuesta</Link>
+                        </div>
+                        <div className="mt-3 grid gap-2">
+                          {concert.candidates.map((candidate) => {
+                            const candidateFanbaseId = candidate.fanbaseId || "";
+                            return (
+                              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/10 px-3 py-2" key={`manage-${candidate.id}`}>
+                                <span className="text-xs font-semibold text-white">{candidate.titulo}</span>
+                                <div className="flex items-center gap-2">
+                                  <Link className="text-[11px] font-semibold text-white underline underline-offset-2 hover:text-[#FFE4F3]" href={`/dashboard/projects/${concert.id}/activities/${candidate.id}/edit`}>Editar</Link>
+                                  <form action={deleteVotingProposal}><input name="fanbaseId" type="hidden" value={candidateFanbaseId} /><input name="projectId" type="hidden" value={concert.id} /><input name="fanprojectId" type="hidden" value={candidate.id} /><button className="text-[11px] font-semibold text-white underline underline-offset-2 hover:text-[#FFE4F3]" type="submit">Eliminar</button></form>
+                                  <form action={closeVotingProposal}><input name="fanbaseId" type="hidden" value={candidateFanbaseId} /><input name="projectId" type="hidden" value={concert.id} /><input name="fanprojectId" type="hidden" value={candidate.id} /><button className="text-[11px] font-semibold text-white underline underline-offset-2 hover:text-[#FFE4F3]" type="submit">Cerrar</button></form>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="order-first lg:order-last">

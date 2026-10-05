@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import { logout } from "@/app/dashboard/actions";
 import EditProfileButton from "@/components/profile/EditProfileButton";
 import PersonalAgenda from "@/components/profile/PersonalAgenda";
+import ParticipationHistory from "@/components/profile/ParticipationHistory";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getFavoriteAgendaForUser } from "@/lib/favorites/favorites";
 import { updateEmailNotificationPreference } from "@/lib/notifications/notifications";
 import { getCurrentUserProfile, updateUserProfile } from "@/lib/users/users";
+import { getUserParticipationHistory } from "@/lib/users/participation";
 import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
 
 export const dynamic = "force-dynamic";
@@ -31,10 +33,11 @@ export default async function ProfilePage() {
     redirect("/login?next=/profile");
   }
 
-  const [profile, initialFavorites, followedFanbases] = await Promise.all([
+  const [profile, initialFavorites, followedFanbases, participationEvents] = await Promise.all([
     getCurrentUserProfile(user),
     getFavoriteAgendaForUser(user.uid),
     getFollowedFanbasesForUser(user.uid),
+    getUserParticipationHistory(user.uid),
   ]);
   const displayName = profile?.displayName || user.name || user.email?.split("@")[0] || "Fan de Narabi";
   const avatarUrl = profile?.photoURL || user.picture || "";
@@ -181,7 +184,9 @@ export default async function ProfilePage() {
         <PersonalAgenda
           initialFavorites={initialFavorites}
           followedFanbases={followedFanbases}
-        />
+        >
+          <ParticipationHistory events={participationEvents} />
+        </PersonalAgenda>
       </section>
     </main>
   );

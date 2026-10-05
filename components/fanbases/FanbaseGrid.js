@@ -6,11 +6,25 @@ import { useMemo, useState } from "react";
 
 const DEFAULT_FANBASE_IMAGE = "/items/hero_one.jpg";
 
+const FANBASE_IMAGES = [
+  { terms: ["blackpink", "blink"], src: "/items/Blackpink-logo.jpg" },
+  { terms: ["aespa"], src: "/items/aespa-logo.png" },
+  { terms: ["bts", "army"], src: "/items/bts-logo.jpg" },
+  { terms: ["stray kids", "straykids", "stay"], src: "/items/straykids-logo.jpg" },
+  { terms: ["seventeen", "carat"], src: "/items/seventeen-logo.webp" },
+  { terms: ["nexz", "nextz"], src: "/items/nexz-logo.jpg" },
+];
+
 function normalizeSearchValue(value) {
   return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("es-AR");
+}
+
+function getFanbaseImage(fanbase) {
+  const searchable = normalizeSearchValue(`${fanbase.name || ""} ${fanbase.kpopGroup || ""}`);
+  return FANBASE_IMAGES.find(({ terms }) => terms.some((term) => searchable.includes(normalizeSearchValue(term))))?.src || DEFAULT_FANBASE_IMAGE;
 }
 
 function SearchIcon() {
@@ -89,13 +103,13 @@ export default function FanbaseGrid({ fanbases }) {
                 className="block overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#823038]"
                 href={`/fanbases/${fanbase.id}`}
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#0D1821]">
+                <div className="relative aspect-[4/3] overflow-hidden bg-white">
                   <Image
-                    alt={`Imagen temporal de la fanbase de ${fanbase.kpopGroup}`}
-                    className="object-cover object-[78%_85%] grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                    alt={`Imagen de la fanbase de ${fanbase.kpopGroup}`}
+                    className="object-cover object-center transition duration-500 group-hover:scale-105 group-hover:grayscale"
                     fill
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    src={DEFAULT_FANBASE_IMAGE}
+                    src={getFanbaseImage(fanbase)}
                   />
                 </div>
               </Link>

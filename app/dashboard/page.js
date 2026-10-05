@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,14 +18,20 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {
   getAllFanbaseMembershipRequests,
+  approveFanbaseMembershipRequest,
+  getFanbaseFollowers,
   getFanbaseMembershipRequests,
+  getFanbaseMembers,
   getFanbases,
   getOrganizedFanbasesForUser,
+  rejectFanbaseMembershipRequest,
 } from "@/lib/fanbases/fanbases";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { getProjectsWithFanProjects } from "@/lib/projects/projects";
+import { deleteFanProject, getProjectWithDetails, getProjectsWithFanProjects } from "@/lib/projects/projects";
 import { isFanProjectVotable } from "@/lib/projects/fanproject-status";
 import { getCurrentUserProfile, listUserProfiles } from "@/lib/users/users";
+import { requireFanbaseAdmin } from "@/lib/users/authorization";
+import { closeFanProjectVoting, getFanProjectVotingConcerts } from "@/lib/votes/fanproject-votes";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +58,8 @@ function MetricCard({ icon, label, value, trend, tone = "pink" }) {
 function PanelHeader({ href, icon, title, action = "Ver todo" }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-2"><DashboardIcon className="size-4 text-[#823038]" icon={icon} /><h2 className="text-lg font-semibold text-[#0D1821]">{title}</h2></div>
-      {href ? <Link className="text-xs font-semibold text-[#823038] hover:underline" href={href}>{action} →</Link> : null}
+      <div className="flex min-w-0 items-center gap-2"><DashboardIcon className="size-4 shrink-0 text-[#823038]" icon={icon} /><h2 className="whitespace-nowrap text-lg font-semibold text-[#0D1821]">{title}</h2></div>
+      {href ? <Link className="shrink-0 whitespace-nowrap text-xs font-semibold text-[#823038] hover:underline" href={href}>{action}</Link> : null}
     </div>
   );
 }
@@ -95,8 +102,27 @@ export default async function DashboardPage() {
   const membershipRequests = isAdmin
     ? await getAllFanbaseMembershipRequests().catch(() => [])
     : (await Promise.all(fanbases.map((fanbase) => getFanbaseMembershipRequests(fanbase.id).catch(() => [])))).flat();
+  const fanbaseInsights = new Map(await Promise.all(fanbases.map(async (fanbase) => {
+    const [members, followers] = await Promise.all([
+      getFanbaseMembers(fanbase.id),
+      getFanbaseFollowers(fanbase.id),
+    ]);
+    return [fanbase.id, { members, followers }];
+  })));
   const fanProjects = projects.flatMap((project) => project.subitems || []);
   const activeVotes = projects.filter((project) => !project.votacionCerradaAt && (project.subitems || []).some((item) => isFanProjectVotable(item.estado))).length;
+  const loadedVotingConcerts = await getFanProjectVotingConcerts(undefined, projects);
+  const votingConcerts = isAdmin
+    ? loadedVotingConcerts
+    : loadedVotingConcerts.map((concert) => {
+      const candidates = concert.candidates.filter((candidate) => managedFanbaseIds.has(candidate.fanbaseId));
+      return {
+        ...concert,
+        candidates,
+        totalVotes: candidates.reduce((total, candidate) => total + candidate.votes, 0),
+        userVote: candidates.some((candidate) => candidate.id === concert.userVote) ? concert.userVote : null,
+      };
+    }).filter((concert) => concert.candidates.length > 0);
   const recentProjects = fanProjects.slice(0, 5);
   const upcomingProjects = projects.slice(0, 4);
   const fanbaseNames = new Map(fanbases.map((fanbase) => [fanbase.id, fanbase.name]));
@@ -109,6 +135,75 @@ export default async function DashboardPage() {
     ...(isAdmin ? [{ href: "/dashboard/users", label: "Administración", icon: faGear }] : []),
   ];
 
+  async function reviewMembershipAction(formData) {
+    "use server";
+
+    const fanbaseId = String(formData.get("fanbaseId") || "").trim();
+    const uid = String(formData.get("uid") || "").trim();
+    const decision = String(formData.get("decision") || "").trim();
+    await requireFanbaseAdmin(fanbaseId);
+
+    if (decision === "reject") {
+      await rejectFanbaseMembershipRequest({ fanbaseId, uid });
+    } else if (decision === "accept-admin") {
+      await approveFanbaseMembershipRequest({ fanbaseId, uid, role: "organizador" });
+    } else {
+      throw new Error("La decisión seleccionada no es válida.");
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/fanbases");
+    revalidatePath(`/fanbases/${fanbaseId}`);
+    redirect("/dashboard");
+  }
+
+  async function closeVotingAction(formData) {
+    "use server";
+
+    const currentUser = await requireFanbaseAdmin(String(formData.get("fanbaseId") || "").trim());
+    const projectId = String(formData.get("projectId") || "").trim();
+    const fanprojectId = String(formData.get("fanprojectId") || "").trim();
+    const project = await getProjectWithDetails(projectId);
+    if (!project || !fanprojectId) throw new Error("La votación no es válida.");
+
+    const currentProfile = await getCurrentUserProfile(currentUser);
+    if (currentProfile?.user_type !== "admin") {
+      const managed = await getOrganizedFanbasesForUser(currentUser.uid);
+      const managedIds = new Set(managed.map((fanbase) => fanbase.id));
+      const activity = project.subitems?.find((item) => item.id === fanprojectId);
+      if (!managedIds.has(project.fanbaseId) && !managedIds.has(activity?.fanbaseId)) {
+        throw new Error("No tenés permisos para cerrar esta votación.");
+      }
+    }
+
+    await closeFanProjectVoting({ projectId, fanprojectId });
+    revalidatePath("/dashboard");
+    revalidatePath("/votaciones");
+    redirect("/dashboard");
+  }
+
+  async function deleteFanProjectAction(formData) {
+    "use server";
+
+    const fanbaseId = String(formData.get("fanbaseId") || "").trim();
+    const currentUser = await requireFanbaseAdmin(fanbaseId);
+    const projectId = String(formData.get("projectId") || "").trim();
+    const activityId = String(formData.get("fanprojectId") || "").trim();
+    const project = await getProjectWithDetails(projectId);
+    const activity = project?.subitems?.find((item) => item.id === activityId);
+    const currentProfile = await getCurrentUserProfile(currentUser);
+    const managed = currentProfile?.user_type === "admin"
+      ? true
+      : (await getOrganizedFanbasesForUser(currentUser.uid)).some((item) => item.id === activity?.fanbaseId);
+
+    if (!project || !activity || !managed) throw new Error("No tenés permisos para eliminar este fanproject.");
+    await deleteFanProject(projectId, activityId);
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/projects/${projectId}`);
+    revalidatePath("/votaciones");
+    redirect("/dashboard");
+  }
+
   return (
     <main className="min-h-screen bg-[#FDFDFF] text-[#0D1821]">
       <div className="mx-auto flex w-full max-w-[1440px] gap-0 px-3 py-5 sm:px-6 lg:px-8">
@@ -119,6 +214,72 @@ export default async function DashboardPage() {
 
           <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Resumen del dashboard"><MetricCard icon={faUsers} label="Usuarios totales" trend={isAdmin ? "+12%" : null} value={isAdmin ? users.length.toLocaleString("es-AR") : "—"} /><MetricCard icon={faUserGroup} label="Fanbases activas" trend="+8%" value={fanbases.length.toLocaleString("es-AR")} /><MetricCard icon={faFileLines} label="Fan projects publicados" trend="+15%" value={fanProjects.length.toLocaleString("es-AR")} /><MetricCard icon={faTicket} label="Conciertos" trend="+5%" value={projects.length.toLocaleString("es-AR")} /><MetricCard icon={faChartColumn} label="Votaciones activas" trend="+27%" value={activeVotes.toLocaleString("es-AR")} tone="rose" /></section>
 
+          {!isAdmin ? (
+            <section className="mt-6 space-y-6" aria-label="Gestión de tus fanbases">
+              <div className="grid gap-4 md:grid-cols-2">
+                {fanbases.map((fanbase) => {
+                  const insight = fanbaseInsights.get(fanbase.id) || { members: [], followers: [] };
+                  const owner = fanbase.ownerName || fanbase.createdByName || "Sin propietario registrado";
+                  const managedProject = projects.find((project) => (
+                    project.fanbaseId === fanbase.id ||
+                    (project.subitems || []).some((item) => item.fanbaseId === fanbase.id)
+                  ));
+
+                  return (
+                    <DashboardPanel key={fanbase.id}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#C0567A]">{fanbase.kpopGroup}</p>
+                          <h2 className="mt-1 text-xl font-semibold text-[#5C1F3A]">{fanbase.name}</h2>
+                          <p className="mt-1 text-xs text-[#8A5468]">Propietario: {owner}</p>
+                        </div>
+                        <Link className="text-xs font-semibold text-[#823038] hover:underline" href={`/fanbases/${fanbase.id}`}>Ver fanbase →</Link>
+                      </div>
+                      <div className="mt-5 grid grid-cols-2 gap-3">
+                        <div className="rounded-xl bg-[#FFF7FB] p-3"><p className="text-xs text-[#8A5468]">Seguidores</p><strong className="mt-1 block text-xl text-[#5C1F3A]">{insight.followers.length}</strong></div>
+                        <div className="rounded-xl bg-[#FFF7FB] p-3"><p className="text-xs text-[#8A5468]">Integrantes</p><strong className="mt-1 block text-xl text-[#5C1F3A]">{insight.members.length}</strong></div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <Link className="rounded-full bg-[#823038] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#5C1F3A]" href={managedProject ? `/dashboard/projects/${managedProject.id}/activities/new` : "/dashboard/projects"}>Agregar fanproject</Link>
+                        <Link className="rounded-full border border-[#823038] px-3 py-2 text-xs font-semibold text-[#823038] transition hover:bg-[#FFE4F3]" href={`/fanbases/${fanbase.id}#publicaciones`}>Agregar publicación</Link>
+                      </div>
+                    </DashboardPanel>
+                  );
+                })}
+              </div>
+
+              <DashboardPanel>
+                <PanelHeader href="/votaciones" icon={faChartColumn} title="Votaciones de tus fanbases" action="Ver públicas" />
+                <p className="mt-1 text-xs text-[#8A5468]">Administrá únicamente las votaciones vinculadas con tus comunidades.</p>
+                <div className="mt-5 grid gap-3">
+                  {votingConcerts.length ? votingConcerts.map((concert) => {
+                    const fanbaseId = concert.fanbaseId || concert.subitems?.find((item) => item.fanbaseId)?.fanbaseId || "";
+                    const candidates = concert.candidates || [];
+                    return (
+                      <article className="rounded-2xl border border-[#F2B8CF] bg-[#FFF7FB] p-4" key={concert.id}>
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div><p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#C0567A]">{fanbaseNames.get(fanbaseId) || "Tu fanbase"}</p><h3 className="mt-1 text-base font-semibold text-[#5C1F3A]">{concert.Titulo || concert.Grupo || "Concierto"}</h3><p className="mt-1 text-xs text-[#8A5468]">{concert.totalVotes} voto{concert.totalVotes === 1 ? "" : "s"} · {candidates.length} propuestas</p></div>
+                          <Link className="text-xs font-semibold text-[#823038] hover:underline" href={`/dashboard/projects/${concert.id}`}>Gestionar →</Link>
+                        </div>
+                        <div className="mt-4 grid gap-2">
+                          {candidates.map((candidate) => (
+                            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2" key={candidate.id}>
+                              <span className="text-sm font-semibold text-[#5C1F3A]">{candidate.titulo} <span className="text-xs font-normal text-[#8A5468]">({candidate.votes} votos)</span></span>
+                              <div className="flex items-center gap-2">
+                                <form action={closeVotingAction}><input name="fanbaseId" type="hidden" value={fanbaseId} /><input name="projectId" type="hidden" value={concert.id} /><input name="fanprojectId" type="hidden" value={candidate.id} /><button className="rounded-full border border-[#823038] px-2.5 py-1 text-[11px] font-semibold text-[#823038] hover:bg-[#FFE4F3]" type="submit">Cerrar con esta propuesta</button></form>
+                                <form action={deleteFanProjectAction}><input name="fanbaseId" type="hidden" value={fanbaseId} /><input name="projectId" type="hidden" value={concert.id} /><input name="fanprojectId" type="hidden" value={candidate.id} /><button className="px-2 py-1 text-[11px] font-semibold text-[#8A5468] hover:text-[#823038]" type="submit">Eliminar</button></form>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </article>
+                    );
+                  }) : <p className="rounded-xl bg-[#FFF7FB] p-4 text-sm text-[#8A5468]">No hay votaciones activas en tus fanbases.</p>}
+                </div>
+              </DashboardPanel>
+            </section>
+          ) : null}
+
           <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_1fr_0.9fr]">
             <DashboardPanel><PanelHeader href="/dashboard/projects" icon={faChartLine} title="Actividad reciente" /><p className="mt-1 text-xs text-[#8A5468]">Fan projects y actividad de la comunidad</p><ActivityChart /><div className="mt-4 flex items-center justify-between text-xs text-[#8A5468]"><span>1 abr</span><span>8 abr</span><span>15 abr</span><span>22 abr</span><span>30 abr</span></div></DashboardPanel>
             <DashboardPanel><PanelHeader href="/" icon={faCalendarDays} title="Próximos conciertos" /><div className="mt-5 divide-y divide-[#F2B8CF]">{upcomingProjects.length ? upcomingProjects.map((project) => <Link className="flex items-center gap-3 py-3 first:pt-0 last:pb-0" href={`/projects/${project.id}`} key={project.id}><span className="grid min-h-14 min-w-16 shrink-0 place-items-center rounded-xl bg-[#FFE4F3] px-2 py-2 text-center text-[10px] font-bold uppercase leading-tight text-[#823038]">{formatDate(project["Dia del concierto"])}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm text-[#0D1821]">{project.Titulo || project.Grupo || "Concierto"}</strong><span className="block truncate text-xs text-[#8A5468]">{project.Ubicacion || project.Pais || "Lugar a confirmar"}</span></span><span className="text-xs font-semibold text-[#823038]">→</span></Link>) : <p className="py-6 text-sm text-[#8A5468]">Todavía no hay conciertos cargados.</p>}</div></DashboardPanel>
@@ -127,7 +288,7 @@ export default async function DashboardPage() {
 
           <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
             <DashboardPanel><PanelHeader href="/dashboard/projects" icon={faFileLines} title="Fan projects recientes" /><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[620px] text-left text-xs"><thead><tr className="border-b border-[#F2B8CF] bg-[#FFF7FB] text-[#823038]"><th className="rounded-l-lg px-3 py-3 font-semibold">Título</th><th className="px-3 py-3 font-semibold">Fanbase</th><th className="px-3 py-3 font-semibold">Fecha</th><th className="rounded-r-lg px-3 py-3 font-semibold">Estado</th></tr></thead><tbody>{recentProjects.length ? recentProjects.map((project) => <tr className="border-b border-[#F2B8CF] last:border-0" key={project.id}><td className="px-3 py-3 font-semibold text-[#0D1821]">{project.titulo || "Fan project sin título"}</td><td className="px-3 py-3 text-[#8A5468]">{project.fanbaseName || "Comunidad"}</td><td className="px-3 py-3 text-[#8A5468]">{formatDate(project.createdAt)}</td><td className="px-3 py-3"><span className="rounded-full bg-[#FFE4F3] px-2.5 py-1 font-semibold text-[#823038]">Publicado</span></td></tr>) : <tr><td className="px-3 py-8 text-center text-sm text-[#8A5468]" colSpan="4">Todavía no hay fan projects publicados.</td></tr>}</tbody></table></div></DashboardPanel>
-            <DashboardPanel><PanelHeader href="/dashboard/fanbases#solicitudes" icon={faShieldHalved} title="Solicitudes de miembros" action="Gestionar" /><div className="mt-5 divide-y divide-[#F2B8CF]">{membershipRequests.length ? membershipRequests.slice(0, 4).map((request) => <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0" key={`${request.fanbaseId}-${request.uid}`}><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#FFF7FB] text-sm font-bold text-[#823038]">{request.displayName.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm text-[#0D1821]">{request.displayName}</strong><span className="block truncate text-xs text-[#8A5468]">{fanbaseNames.get(request.fanbaseId) || "Fanbase"}</span></span><span className="rounded-full bg-[#FFE4F3] px-2 py-1 text-xs font-semibold text-[#823038]">Pendiente</span></div>) : <p className="py-5 text-sm text-[#8A5468]">No hay solicitudes pendientes.</p>}</div><div className="mt-5 rounded-xl bg-[#FFE4F3] p-4 text-xs leading-5 text-[#823038]"><DashboardIcon className="mr-2 size-3" icon={faClock} /> Solo administradores pueden revisar y asignar permisos.</div></DashboardPanel>
+            <DashboardPanel><PanelHeader href="/dashboard/fanbases#solicitudes" icon={faShieldHalved} title="Solicitudes" action="Gestionar" /><div className="mt-5 divide-y divide-[#F2B8CF]">{membershipRequests.length ? membershipRequests.slice(0, 4).map((request) => <div className="py-3 first:pt-0 last:pb-0" key={`${request.fanbaseId}-${request.uid}`}><div className="flex items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#FFF7FB] text-sm font-bold text-[#823038]">{request.displayName.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm text-[#0D1821]">{request.displayName}</strong><span className="block truncate text-xs text-[#8A5468]">{fanbaseNames.get(request.fanbaseId) || "Fanbase"}</span></span><span className="rounded-full bg-[#FFE4F3] px-2 py-1 text-xs font-semibold text-[#823038]">Pendiente</span></div><form action={reviewMembershipAction} className="mt-2 flex gap-2 pl-12"><input name="fanbaseId" type="hidden" value={request.fanbaseId} /><input name="uid" type="hidden" value={request.uid} /><button className="rounded-full bg-[#823038] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#5C1F3A]" name="decision" type="submit" value="accept-admin">Aceptar</button><button className="rounded-full border border-[#F2B8CF] px-2.5 py-1 text-[11px] font-semibold text-[#823038] hover:bg-[#FFE4F3]" name="decision" type="submit" value="reject">Rechazar</button></form></div>) : <p className="py-5 text-sm text-[#8A5468]">No hay solicitudes pendientes.</p>}</div><div className="mt-5 rounded-xl bg-[#FFE4F3] p-4 text-xs leading-5 text-[#823038]"><DashboardIcon className="mr-2 size-3" icon={faClock} /> Las solicitudes se revisan por cada fanbase.</div></DashboardPanel>
           </section>
         </div>
       </div>

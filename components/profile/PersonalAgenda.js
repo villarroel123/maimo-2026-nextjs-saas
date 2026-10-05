@@ -148,6 +148,7 @@ function getCalendarEvents(favorites) {
 export default function PersonalAgenda({
   initialFavorites,
   followedFanbases = [],
+  children,
 }) {
   const { favorites, isLoading } = useFavorites();
   const [now, setNow] = useState(() => new Date());
@@ -197,24 +198,15 @@ export default function PersonalAgenda({
   );
 
   return (
-    <section className="mt-10" id="agenda">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#C0567A]">
-            Tu planificación
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-[#5C1F3A]">
-            Mi agenda
-          </h2>
-          <p className="mt-2 text-sm text-[#8A5468]">
-            Tus fanprojects guardados, fechas y recordatorios en un solo lugar.
-          </p>
-        </div>
-        <span className="rounded-full bg-[#FFE4F3] px-3 py-1.5 text-xs font-semibold text-[#823038]">
-          {displayedFavorites.length} guardado
-          {displayedFavorites.length === 1 ? "" : "s"}
-        </span>
-      </div>
+    <>
+      <section
+        className="mt-10 rounded-[2rem] bg-[repeating-linear-gradient(135deg,#F2B8CF_0px,#F2B8CF_8px,#FFF7FB_8px,#FFF7FB_16px)] p-2 sm:p-3"
+        id="agenda"
+      >
+        <div className="rounded-[1.5rem] bg-[#FFF7FB] px-4 py-6 sm:px-7 sm:py-8">
+        <h2 className="text-2xl font-semibold text-[#5C1F3A]">
+          Mi agenda
+        </h2>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <article className="rounded-3xl border border-[#F2B8CF] bg-[#FFE4F3] p-5 shadow-[0_12px_30px_rgba(130,48,56,0.06)]">
@@ -316,9 +308,14 @@ export default function PersonalAgenda({
             </div>
           )}
         </div>
-      </div>
+        </div>
+        </div>
+      </section>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      {children}
+
+      <section className="mt-10 rounded-3xl border border-[#F2B8CF] bg-[#FFF7FB] p-5 sm:p-7">
+        <div className="grid gap-6 lg:grid-cols-2">
         <div>
           <h3 className="text-xl font-semibold text-[#5C1F3A]">
             Fanprojects guardados
@@ -398,7 +395,8 @@ export default function PersonalAgenda({
             </div>
           )}
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { deleteProject, getProjectsWithFanProjects } from "@/lib/projects/projects";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getCurrentUserProfile } from "@/lib/users/users";
+import { getOrganizedFanbasesForUser } from "@/lib/fanbases/fanbases";
 import { requireAdmin } from "@/lib/users/authorization";
 import CircleArrowIcon from "@/components/icons/CircleArrowIcon";
 import DeleteButton from "@/components/DeleteButton";
@@ -11,10 +12,16 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const profile = user ? await getCurrentUserProfile(user) : null;
   const isAdmin = profile?.user_type === "admin";
 
-  const projects = await getProjectsWithFanProjects();
+  const allProjects = await getProjectsWithFanProjects();
+  const managedFanbaseIds = new Set(isAdmin ? [] : (await getOrganizedFanbasesForUser(user.uid)).map((fanbase) => fanbase.id));
+  const projects = isAdmin ? allProjects : allProjects.filter((project) => (
+    managedFanbaseIds.has(project.fanbaseId) ||
+    (project.subitems || []).some((activity) => managedFanbaseIds.has(activity.fanbaseId))
+  ));
 
   async function handleDeleteProject(formData) {
     "use server";
