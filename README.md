@@ -1,144 +1,205 @@
-# Next.js SaaS Starter with Firebase
+# Narabi
 
-Starter profesional para construir aplicaciones SaaS con Next.js, Firebase Authentication, Firebase Admin SDK, Cloud Firestore y Tailwind CSS.
+Narabi es una plataforma web pensada para organizar comunidades de fans de K-pop alrededor de conciertos, fanbases y fanprojects. El proyecto permite centralizar propuestas, votaciones, publicaciones, conversaciones y fechas importantes para que la organización de una comunidad no dependa de información dispersa en distintas redes sociales.
 
-La base prioriza renderizado server-side, rutas protegidas, sesion HTTP-only, aislamiento de datos por usuario y una estructura extensible para reemplazar la entidad `items` por la entidad principal de cada producto.
+La aplicación comenzó a partir de una base SaaS con Next.js y Firebase. Sobre esa estructura inicial se reemplazó la entidad genérica de ejemplo por un dominio propio compuesto por conciertos, fanprojects, fanbases, usuarios, votos, comentarios, solicitudes, favoritos y notificaciones. El resultado es una aplicación con páginas públicas, perfiles personales y paneles privados diferentes según el rol de cada cuenta.
 
-## SaaS
+## Objetivo del proyecto
 
-Una SaaS, o Software as a Service, es una aplicacion accesible desde internet en la que los usuarios utilizan funcionalidades sin instalar software localmente. La aplicacion se ejecuta en infraestructura remota y entrega su interfaz mediante el navegador.
+El objetivo principal de Narabi es facilitar la coordinación entre fans antes y durante un concierto. Una persona puede buscar conciertos, conocer los fanprojects propuestos, votar por una idea, comentar, responder a otros usuarios y guardar actividades en su agenda. También puede seguir fanbases para personalizar el contenido que ve.
 
-En terminos funcionales, una SaaS suele incluir:
+Las fanbases disponen de herramientas para administrar solamente su comunidad: revisar seguidores, aceptar o rechazar solicitudes, publicar contenido, crear fanprojects y gestionar sus votaciones. Los administradores generales tienen una vista global del sistema y pueden gestionar todos los datos de la plataforma.
 
-- Registro e inicio de sesion.
-- Gestion de informacion propia por usuario.
-- Panel privado o dashboard.
-- Persistencia de datos.
-- Rutas publicas y rutas protegidas.
-- Roles y permisos.
-- Funcionalidades especificas asociadas a un dominio.
+## Tecnologías utilizadas
 
-Casos posibles:
+- **Next.js 16.3.1** con App Router.
+- **React 19.2.8** para la interfaz y los componentes interactivos.
+- **JavaScript** como lenguaje principal.
+- **Tailwind CSS 4** para estilos, diseño adaptable y sistema visual.
+- **Firebase Authentication** para correo/contraseña y acceso con Google.
+- **Firebase Admin SDK** para validar sesiones y operar de forma segura desde el servidor.
+- **Cloud Firestore** como base de datos.
+- **Google Maps JavaScript API y Places API (New)** para buscar estadios y teatros.
+- **Font Awesome** para los iconos de navegación y acciones.
+- **Resend** como integración opcional para notificaciones por correo.
+- **Vercel** como plataforma prevista para el despliegue.
 
-- Gestor de proyectos.
-- Administrador de gastos.
-- Seguimiento de habitos.
-- Catalogo de productos.
-- Organizador de contenido.
-- Registro de suscripciones.
-- Administrador de clientes.
-- Plataforma de publicaciones.
-- Seguimiento de postulaciones.
-- Panel de recursos educativos.
+## Cómo fue construido
 
-## Caracteristicas
+El proyecto se desarrolló utilizando la arquitectura de App Router de Next.js. Las páginas se implementaron como Server Components siempre que no necesitaban interacción directa del navegador. Esto permite consultar Firestore en el servidor y entregar la información inicial ya preparada. Los componentes que requieren estado, eventos, ventanas emergentes, filtros o actualizaciones inmediatas se definieron como Client Components.
 
-- Next.js con App Router.
-- JavaScript.
-- Tailwind CSS.
-- Dark mode.
-- Tipografia Geist mediante `next/font`.
-- Firebase Authentication.
-- Inicio de sesion con email y contrasena.
-- Inicio de sesion con Google.
-- Sesion server-side mediante cookie HTTP-only.
-- Firebase Admin SDK para validacion segura desde servidor.
-- Cloud Firestore como base de datos.
-- Rutas protegidas mediante middleware.
-- Dashboard privado en `/dashboard`.
-- Perfiles de usuario en la coleccion `users`.
-- Roles simples mediante `user_type`.
-- ABM base en `/dashboard/items`.
-- Publicacion de registros en la home.
-- Ruta publica por item en `/items/[id]`.
-- Imagen local por defecto.
-- Upload opcional con Cloud Storage for Firebase mediante `FIREBASE_STORAGE=true`.
+La lógica no se concentró dentro de las vistas. Las consultas y operaciones de cada área se separaron en módulos dentro de `lib`: `projects` administra conciertos y fanprojects, `fanbases` administra comunidades y miembros, `votes` procesa votaciones, `comments` reúne los distintos sistemas de conversación, `favorites` construye la agenda personal y `users` controla perfiles, roles y permisos. De esta manera, las páginas se ocupan principalmente de componer la interfaz.
 
-## Arquitectura
+Las operaciones de escritura se realizan mediante Server Actions o endpoints internos. Antes de modificar información se vuelve a comprobar la sesión y el nivel de acceso en el servidor. No se confía únicamente en ocultar botones desde la interfaz: las funciones `requireAdmin` y `requireFanbaseAdmin` impiden que una persona sin permisos ejecute acciones administrativas aunque intente llamar directamente a una ruta.
 
-El proyecto utiliza App Router y separa responsabilidades entre servidor y cliente.
+Durante el desarrollo también se optimizaron las interacciones de votos, reacciones y comentarios para evitar recargas completas. Los componentes mantienen una respuesta visual inmediata y luego sincronizan los cambios con el servidor. Las consultas independientes se ejecutan en paralelo cuando es posible y se limitan los documentos recuperados en conversaciones y publicaciones.
 
-- Las paginas son Server Components por defecto.
-- Las operaciones de escritura utilizan Server Actions.
-- La sesion se valida en servidor con Firebase Admin SDK.
-- Los datos privados se filtran por `userId`.
-- Los Client Components se utilizan para interactividad de UI, autenticacion client-side y formularios con estado local.
-
-Estructura principal:
+## Estructura general
 
 ```txt
 app/
-  api/
-    session/
-      login/
-      logout/
-  dashboard/
-    items/
-    users/
-  items/
-    [id]/
-  login/
+  api/                     Sesión y endpoints internos
+  dashboard/               Paneles privados y administración
+  fanbases/                Listado y detalle de fanbases
+  favorites/               Favoritos del usuario
+  login/                   Inicio de sesión
+  notifications/           Notificaciones internas
+  onboarding/fanbases/     Selección inicial de fanbases
+  profile/                 Perfil y agenda personal
+  projects/                Conciertos y fanprojects
+  votaciones/              Votaciones de fanprojects
 
 components/
-  items/
-  users/
+  fanbases/                Cards, publicaciones y controles de comunidad
+  favorites/               Estado y botones de favoritos
+  home/                    Buscadores de la página principal
+  profile/                 Agenda, perfil e historial de participación
+  projects/                Ideas y componentes de conciertos
+  venues/                  Selector e información de recintos
+  votes/                   Reacciones, comentarios y avisos de acceso
 
 lib/
-  firebase/
-  items/
-  users/
+  comments/                Ideas, comentarios y respuestas
+  email/                   Integración con Resend
+  fanbases/                Datos y permisos de fanbases
+  favorites/               Favoritos y agenda
+  firebase/                Cliente, Admin SDK, sesión y Firestore
+  google/                  Carga de Google Places
+  notifications/           Notificaciones internas y por email
+  projects/                Conciertos, fanprojects e imágenes
+  users/                   Perfiles, roles, autorización y actividad
+  votes/                   Votos y reacciones
+
+public/items/               Imágenes locales del proyecto
 ```
 
-## Requisitos
+## Funcionalidades por sección
 
-- Node.js compatible con Next.js 16.
-- Proyecto Firebase.
-- Authentication habilitado.
-- Cloud Firestore habilitado.
-- Cuenta de servicio de Firebase Admin SDK.
+### Página principal
 
-Cloud Storage for Firebase es opcional. El modo predeterminado utiliza imagenes locales dentro de `public`.
+La home presenta el concepto de Narabi y reúne accesos a conciertos, fanprojects, fanbases y votaciones. Incluye un buscador que relaciona conciertos y fanprojects con su artista, de modo que una búsqueda por nombre de grupo también encuentre contenido asociado aunque el título del evento sea diferente.
 
-## Configuracion
+Los listados utilizan imágenes locales predeterminadas y componentes reutilizables. Las fanbases se muestran mediante una grilla con sus imágenes correspondientes y los conciertos utilizan una función centralizada para resolver su portada.
 
-1. Instalar dependencias:
+### Conciertos y fanprojects
 
-```bash
-npm install
+Cada concierto tiene una página pública con su fecha, país, recinto y fanprojects relacionados. Dentro de un fanproject se muestran la descripción, los materiales necesarios y las instrucciones organizadas por sector.
+
+La página del concierto incluye una sección para proponer ideas. Las ideas funcionan como una conversación: se pueden publicar comentarios, responder y reaccionar con votos positivos o negativos. Los fanprojects también poseen comentarios y respuestas propias.
+
+### Votaciones
+
+Las votaciones se agrupan por concierto y artista. Cada cuenta puede emitir un voto por concierto y cambiar su selección. La interfaz muestra el total de votos, las opciones disponibles, reacciones y comentarios.
+
+Una persona sin sesión puede consultar las votaciones, pero al intentar votar, reaccionar o comentar recibe un aviso para iniciar sesión. Los usuarios comunes ven contenido relacionado con las fanbases que siguen. Los responsables de una fanbase pueden crear, editar, cerrar o eliminar las votaciones correspondientes a su propia comunidad. Los administradores generales pueden gestionar todas.
+
+### Fanbases
+
+La sección de fanbases permite buscar comunidades por nombre y entrar a su página de detalle. Cada fanbase muestra información general, cantidad de seguidores, integrantes, publicaciones y fanprojects vinculados.
+
+Las publicaciones pueden incluir texto y videos embebidos mediante `iframe`. Los videos se reproducen desde la misma página y se muestran en filas individuales. La edición y eliminación de contenido se limita a propietarios, integrantes autorizados o administradores, según corresponda.
+
+Un usuario normal puede seguir una fanbase o enviar una solicitud para colaborar. Desde el dashboard de la comunidad, el propietario puede aceptar o rechazar la solicitud y decidir si la persona recibirá permisos administrativos.
+
+### Perfil y agenda
+
+La página personal reúne los datos de la cuenta, la foto de perfil, la configuración de notificaciones y la agenda. El calendario se construye a partir de los fanprojects guardados y marca las fechas de los conciertos. También permite descargar un evento en formato `.ics` para incorporarlo a un calendario externo.
+
+El perfil incluye un historial de eventos en los que la persona participó. Para construirlo se combinan votos, ideas, comentarios y respuestas guardados en Firestore, agrupándolos por concierto. Debajo se muestran los fanprojects favoritos y las fanbases seguidas.
+
+### Dashboard
+
+El dashboard cambia según el tipo de usuario:
+
+- Un usuario con rol `user` no tiene acceso al dashboard.
+- Un usuario con rol `fanbase` accede solamente a la información de las fanbases que administra. Puede consultar seguidores, integrantes, solicitudes, publicaciones, fanprojects y votaciones propias.
+- Un usuario con rol `admin` puede ver y administrar la información global del sitio, incluidos usuarios, conciertos y comunidades.
+
+## Autenticación y sesión
+
+El inicio de sesión se realiza con Firebase Authentication mediante correo y contraseña o Google. Después de autenticar al usuario en el cliente, el ID token se envía a `/api/session/login`. El servidor lo intercambia por una cookie `__session` HTTP-only con una duración de cinco días.
+
+Los Server Components y las Server Actions recuperan esa cookie con `getCurrentUser()` y la verifican mediante Firebase Admin SDK. Al cerrar sesión se elimina la cookie desde `/api/session/logout`.
+
+Cuando una cuenta de tipo `user` inicia sesión por primera vez y todavía no sigue comunidades, se la dirige al onboarding de fanbases. Allí selecciona los grupos que quiere seguir. Esta preferencia se utiliza para personalizar las votaciones y reducir interacciones ajenas a las comunidades elegidas.
+
+## Roles y permisos
+
+Los perfiles se guardan en la colección `users` y utilizan el campo `user_type`.
+
+```js
+{
+  email: "usuario@example.com",
+  displayName: "Nombre visible",
+  photoURL: "https://...",
+  provider: "google.com",
+  user_type: "user", // user | fanbase | admin
+  fanbases: ["id-de-fanbase"],
+  email_notifications: true,
+  createdAt: "...",
+  updatedAt: "..."
+}
 ```
 
-2. Copiar las variables de entorno:
+La propiedad `fanbases` vincula una cuenta de tipo `fanbase` con las comunidades que puede administrar. El rol `admin` no necesita esa relación porque posee acceso global.
 
-```bash
-cp .env.example .env
-```
+## Modelo de datos en Firestore
 
-3. Completar `.env` con los datos de Firebase Web App y Firebase Admin SDK.
-
-4. En Firebase Console habilitar Authentication con:
-
-- Email/Password.
-- Google.
-
-5. Habilitar Cloud Firestore.
-
-6. Mantener `FIREBASE_STORAGE=false` para utilizar imagenes locales.
-
-7. Ejecutar el servidor de desarrollo:
-
-```bash
-npm run dev
-```
-
-8. Abrir la aplicacion:
+La estructura principal utiliza las siguientes colecciones y subcolecciones:
 
 ```txt
-http://localhost:3000
+users/{uid}
+  favorites/{favoriteId}
+  notifications/{notificationId}
+
+fanbases/{fanbaseId}
+  followers/{uid}
+  members/{uid}
+  membershipRequests/{uid}
+  posts/{postId}
+
+proyectos/{projectId}
+  fanprojects/{fanprojectId}
+    comments/{commentId}
+      replies/{replyId}
+  fanprojectVotes/{uid}
+  votingReactions/{uid}
+  votingComments/{commentId}
+  ideas/{ideaId}
+    replies/{replyId}
+    reactions/{uid}
 ```
 
-## Variables De Entorno
+`proyectos` contiene los conciertos. Sus documentos guardan información como título, grupo, país, fecha, recinto e imagen. Los fanprojects son una subcolección porque pertenecen a un concierto específico. Los votos utilizan el UID como identificador del documento, lo que permite garantizar un único voto por persona y concierto.
 
-Ejemplo completo:
+## Sistema visual
+
+La interfaz fue creada con Tailwind CSS y una paleta centrada en rosas y bordó:
+
+- Bordó principal: `#823038`.
+- Bordó oscuro: `#5C1F3A`.
+- Rosa claro: `#FFE4F3`.
+- Rosa de bordes: `#F2B8CF`.
+- Fondo rosado: `#FFF7FB`.
+- Fondo general: `#FDFDFF`.
+
+Se utilizaron cards con bordes redondeados, grillas adaptables, sliders horizontales, estados hover e imágenes de concierto o fanbase. Los estilos responsivos permiten que las grillas se conviertan en una sola columna en pantallas pequeñas.
+
+## Google Places para recintos
+
+Al crear o editar un concierto, el campo de recinto utiliza Google Places para sugerir estadios y teatros mientras se escribe. Para habilitarlo se necesitan **Maps JavaScript API** y **Places API (New)**.
+
+La clave debe ser una clave de navegador restringida por dominio y por API. En desarrollo se puede autorizar:
+
+```txt
+http://localhost:3000/*
+```
+
+En producción también debe agregarse el dominio desplegado. La aplicación conserva los nombres de recintos creados anteriormente aunque Google Places no esté configurado.
+
+## Variables de entorno
+
+Crear un archivo `.env` a partir de `.env.example` y completar los valores sin subir credenciales al repositorio.
 
 ```bash
 # Firebase Web App
@@ -147,322 +208,86 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
-
-# Firebase Storage
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-FIREBASE_STORAGE=false
 
-# Google Places para buscar recintos (opcional)
+# Google Places
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+
+# Imágenes
+FIREBASE_STORAGE=false
 
 # Firebase Admin SDK
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# Resend: notificaciones por email (solo servidor)
+# Notificaciones por email (opcional)
 RESEND_API_KEY=
 RESEND_FROM_EMAIL="Narabi <novedades@tu-dominio.com>"
 APP_URL=http://localhost:3000
 ```
 
-Las variables con prefijo `NEXT_PUBLIC_` son visibles desde el cliente. Las variables `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` y `FIREBASE_PRIVATE_KEY` son privadas y se utilizan desde Firebase Admin SDK en el servidor.
+Las variables que comienzan con `NEXT_PUBLIC_` se incluyen en el cliente. `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL` y `RESEND_API_KEY` son secretos de servidor y nunca deben exponerse en componentes del navegador.
 
-La clave privada debe conservar los saltos de linea escapados mediante `\n`.
+## Configuración de Firebase
 
-El archivo `.env` no debe subirse al repositorio.
+1. Crear un proyecto en Firebase Console.
+2. Registrar una aplicación web y copiar sus credenciales públicas.
+3. Habilitar Authentication con Email/Password y Google.
+4. Crear la base de datos Cloud Firestore.
+5. Generar una cuenta de servicio desde la configuración del proyecto.
+6. Copiar los valores de la cuenta de servicio a las variables privadas del `.env`.
+7. Crear manualmente el primer administrador cambiando `user_type` a `admin` en su documento de `users`.
+8. Si se necesita una cuenta propietaria, usar `user_type: "fanbase"` y agregar los IDs autorizados dentro de `fanbases`.
 
-## Recintos con Google Places
+Las imágenes se sirven desde `public/items` de manera predeterminada. Cloud Storage es opcional y se activa configurando `FIREBASE_STORAGE=true` junto con el bucket correspondiente.
 
-Al crear o editar un concierto, el dashboard permite elegir un estadio o teatro desde las sugerencias de Google Places. Los fanprojects de ese concierto comparten el recinto; `Ubicacion` sigue siendo el punto de encuentro. Si la API no está configurada, no se pueden seleccionar nuevos recintos. Los nombres cargados manualmente con versiones anteriores se conservan al editar.
+## Instalación y ejecución
 
-Para activar las sugerencias:
+Requisitos:
 
-1. En Google Cloud, habilitar la facturación, **Maps JavaScript API** y **Places API (New)**.
-2. Crear una clave para navegador restringida a los sitios autorizados (por ejemplo, `http://localhost:3000/*` y el dominio de Vercel) y a las APIs habilitadas.
-3. Agregar `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` en `.env` y en las variables de entorno de Vercel para Production y Preview.
-4. Reiniciar `npm run dev` y volver a desplegar en Vercel para incorporar la variable pública al navegador.
+- Node.js compatible con Next.js 16.
+- npm.
+- Un proyecto Firebase configurado.
 
-Se guarda el `placeId` de Google como referencia del recinto. El nombre y la dirección se consultan cuando se muestran; no se guardan permanentemente como datos de Google. La clave pública debe estar restringida por sitios y APIs. Google Maps Platform requiere facturación incluso cuando el uso queda dentro de las cuotas sin costo. Antes de publicar datos de Google Places, revisar sus requisitos de atribución, términos y privacidad.
+Instalar dependencias:
 
-## Notificaciones Y Email
+```bash
+npm install
+```
 
-Cuando un administrador cambia la fecha/horario o la ubicación de un concierto, o el estado de un fanproject, Narabi crea una notificación interna para quienes lo guardaron en Favoritos. Cada persona puede elegir en `/favorites` si también desea recibir esos avisos por email.
-
-El envío se realiza únicamente en el servidor mediante la API de Resend. Para activarlo:
-
-1. Crear una API key en Resend y verificar el dominio/remitente.
-2. Cargar `RESEND_API_KEY` y `RESEND_FROM_EMAIL` como **Secret** en Vercel.
-3. Cargar `APP_URL` con la URL productiva del sitio, por ejemplo `https://maimo-2026-nextjs-saas.vercel.app`.
-
-Si estas variables no existen, la notificación interna continúa funcionando y el email se omite de forma segura.
-
-## Scripts
+Iniciar el entorno de desarrollo:
 
 ```bash
 npm run dev
-npm run build
-npm run start
-npm run lint
 ```
 
-## Autenticacion
+Abrir [http://localhost:3000](http://localhost:3000).
 
-El proyecto incluye autenticacion con Firebase Authentication.
-
-Metodos incluidos:
-
-- Email y contrasena.
-- Google.
-
-Al iniciar sesion, el cliente obtiene el ID token de Firebase y lo envia a `/api/session/login`. El servidor crea una session cookie HTTP-only que luego se valida desde Server Components, Server Actions y middleware.
-
-Las rutas privadas redirigen a `/login` si no existe una sesion valida.
-
-## Usuarios Y Roles
-
-Cada usuario autenticado tiene un documento asociado en la coleccion `users`.
-
-Ejemplo:
-
-```js
-{
-  email: "usuario@example.com",
-  displayName: "Usuario",
-  provider: "google.com",
-  user_type: "user",
-  createdAt: "...",
-  updatedAt: "...",
-  lastLoginAt: "..."
-}
-```
-
-Los usuarios creados desde la web se registran con `user_type: "user"`.
-
-Si un usuario tiene `user_type: "admin"`, puede acceder al panel de administracion de usuarios desde `/dashboard/users`.
-
-Para crear el primer administrador, modificar manualmente en Firestore el documento correspondiente dentro de `users` y cambiar `user_type` a `"admin"`.
-
-## Firestore
-
-El ABM base utiliza la coleccion `items`.
-
-Cada documento guarda la relacion con el usuario autenticado mediante `userId`.
-
-Ejemplo:
-
-```js
-{
-  userId: "uid-del-usuario",
-  title: "Registro de ejemplo",
-  description: "Descripcion del registro",
-  status: "pending",
-  published: false,
-  imageUrl: "/items/ejemplo.jpg",
-  imagePath: "",
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp()
-}
-```
-
-El acceso a datos privados debe conservar siempre la validacion de propiedad:
-
-- Un usuario solo lista sus propios documentos.
-- Un usuario solo edita sus propios documentos.
-- Un usuario solo elimina sus propios documentos.
-- Los registros publicados pueden consultarse desde rutas publicas.
-
-## Adaptacion De La Entidad Principal
-
-La entidad `items` funciona como referencia inicial. Para construir un producto real, puede reemplazarse por una entidad propia del dominio.
-
-Ejemplos:
-
-- `projects`
-- `products`
-- `expenses`
-- `clients`
-- `posts`
-- `courses`
-
-Al adaptar la entidad, revisar:
-
-- Nombre de la coleccion en Firestore.
-- Rutas dentro de `/dashboard`.
-- Server Actions de creacion, edicion y eliminacion.
-- Campos del formulario.
-- Validaciones.
-- Listados privados.
-- Vistas publicas, si corresponde.
-- Carpeta de imagenes locales.
-- Reglas de Storage, si se usa Firebase Storage.
-
-## Imagenes
-
-El proyecto soporta dos estrategias para imagenes:
-
-- Imagen local en `public`, activa por defecto.
-- Cloud Storage for Firebase, opcional mediante `FIREBASE_STORAGE=true`.
-
-### Imagen Local
-
-Esta es la opcion predeterminada.
-
-Las imagenes deben ubicarse dentro de la carpeta `public`. Por ejemplo:
-
-```txt
-public/
-  items/
-    ejemplo.jpg
-```
-
-En el formulario debe ingresarse solamente el nombre del archivo:
-
-```txt
-ejemplo.jpg
-```
-
-La aplicacion transforma ese valor en la ruta publica:
-
-```txt
-/items/ejemplo.jpg
-```
-
-Documento resultante:
-
-```js
-{
-  imageUrl: "/items/ejemplo.jpg",
-  imagePath: ""
-}
-```
-
-Para otra entidad, usar una carpeta equivalente. Por ejemplo:
-
-```txt
-public/
-  products/
-    producto.jpg
-```
-
-## Firebase Storage Opcional
-
-Cloud Storage for Firebase puede activarse para permitir upload de archivos desde el formulario.
-
-Configuracion requerida:
-
-1. Habilitar Cloud Storage for Firebase en Firebase Console.
-2. Verificar que el proyecto este en plan Blaze si Firebase lo requiere.
-3. Completar `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`.
-4. Configurar `FIREBASE_STORAGE=true`.
-5. Reiniciar el servidor de desarrollo.
-
-Reglas sugeridas para Storage con la entidad `items`:
-
-```js
-rules_version = '2';
-
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /items/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
-En modo Storage, las imagenes se guardan con este formato:
-
-```txt
-items/{uid-del-usuario}/{id-del-item-o-uploads}/{timestamp}.jpg
-```
-
-Documento resultante:
-
-```js
-{
-  imageUrl: "https://firebasestorage.googleapis.com/...",
-  imagePath: "items/uid/itemId/archivo.jpg"
-}
-```
-
-Para otra entidad, actualizar la ruta y las reglas. Por ejemplo, con `products`:
-
-- Carpeta local: `public/products`.
-- Ruta local guardada: `/products/imagen.jpg`.
-- Ruta en Storage: `products/{uid}/{id}/{archivo}`.
-- Regla de Storage: `match /products/{userId}/{allPaths=**}`.
-
-## Pricing De Firebase
-
-Valores consultados en la pagina oficial de Firebase Pricing el 27 de agosto de 2026.
-
-Fuente: https://firebase.google.com/pricing
-
-### Plan Spark
-
-Spark es el plan sin costo inicial y no requiere metodo de pago.
-
-Limites relevantes:
-
-- Authentication: email/password y proveedores sociales incluidos.
-- Authentication con Identity Platform: hasta 50.000 usuarios activos mensuales.
-- Cloud Firestore Standard: 1 GiB de datos almacenados.
-- Cloud Firestore Standard: 50.000 lecturas de documentos por dia.
-- Cloud Firestore Standard: 20.000 escrituras de documentos por dia.
-- Cloud Firestore Standard: 20.000 eliminaciones de documentos por dia.
-- Cloud Firestore Standard: 10 GiB de egreso de red por mes.
-- Firebase Hosting: 10 GB de almacenamiento.
-- Firebase Hosting: 360 MB por dia de transferencia.
-
-Consideracion sobre Storage:
-
-- En proyectos nuevos, Firebase puede requerir actualizar a Blaze para utilizar Cloud Storage for Firebase.
-- Por ese motivo, este starter usa imagenes locales por defecto y deja Storage como opcion configurable.
-
-### Plan Blaze
-
-Blaze es el plan de pago por uso. Requiere vincular una cuenta de facturacion, incluye cuotas sin costo y cobra el uso excedente segun el producto.
-
-Cuotas sin costo relevantes en Blaze:
-
-- Authentication con Identity Platform: hasta 50.000 usuarios activos mensuales; luego aplica pricing de Google Cloud.
-- Cloud Firestore Standard: hasta 1 GiB de datos almacenados; luego aplica pricing de Google Cloud.
-- Cloud Firestore Standard: hasta 50.000 lecturas por dia; luego aplica pricing de Google Cloud.
-- Cloud Firestore Standard: hasta 20.000 escrituras por dia; luego aplica pricing de Google Cloud.
-- Cloud Firestore Standard: hasta 20.000 eliminaciones por dia; luego aplica pricing de Google Cloud.
-- Cloud Firestore Standard: hasta 10 GiB de egreso por mes; luego aplica pricing de Google Cloud.
-
-Cloud Storage en Blaze para buckets `*.firebasestorage.app` y buckets adicionales:
-
-- Hasta 5 GB-mes almacenados sin costo; luego aplica pricing de Google Cloud Storage.
-- Hasta 100 GB descargados por mes sin costo; luego aplica pricing de Google Cloud Storage.
-- Hasta 5.000 operaciones de upload por mes sin costo; luego aplica pricing de Google Cloud Storage.
-- Hasta 50.000 operaciones de download por mes sin costo; luego aplica pricing de Google Cloud Storage.
-
-Cloud Storage en Blaze para buckets legacy `*.appspot.com`:
-
-- Hasta 5 GB almacenados sin costo; luego USD 0,026 por GB.
-- Hasta 1 GB descargado por dia sin costo; luego USD 0,12 por GB.
-- Hasta 20.000 operaciones de upload por dia sin costo; luego USD 0,05 cada 10.000 operaciones.
-- Hasta 50.000 operaciones de download por dia sin costo; luego USD 0,004 cada 10.000 operaciones.
-
-Los importes pueden variar por region, producto y cambios de pricing. Para estimaciones productivas debe utilizarse la calculadora oficial de Firebase.
-
-## Desarrollo
-
-Comandos habituales:
+## Scripts disponibles
 
 ```bash
-npm run dev
+npm run dev      # Servidor de desarrollo
+npm run lint     # Análisis estático con ESLint
+npm run build    # Compilación optimizada de producción
+npm run start    # Ejecutar la compilación de producción
+```
+
+Antes de subir cambios se recomienda ejecutar:
+
+```bash
 npm run lint
 npm run build
 ```
 
-En desarrollo, Next.js compila rutas bajo demanda. La navegacion puede sentirse mas lenta que en una build productiva ejecutada con:
+## Decisiones importantes
 
-```bash
-npm run build
-npm run start
-```
+Las imágenes locales fueron elegidas como opción predeterminada para evitar que el desarrollo dependa de Cloud Storage y de un plan de facturación. Google Places quedó como integración opcional porque requiere una clave restringida y facturación habilitada en Google Cloud. Las notificaciones internas funcionan sin Resend; el correo se envía solamente cuando las variables del servicio están configuradas.
+
+El modelo de permisos se resuelve siempre en el servidor. La personalización por fanbases seguidas se aplica al recuperar las votaciones, y la administración de una comunidad se valida comparando el UID y los IDs asociados al perfil. Estas decisiones permiten que el diseño de la interfaz acompañe a la seguridad, pero no sea la única barrera de acceso.
+
+## Estado del proyecto
+
+Narabi incluye actualmente autenticación, perfiles, onboarding, conciertos, fanprojects, fanbases, publicaciones, videos embebidos, votaciones, comentarios, respuestas, reacciones, favoritos, agenda, historial de participación, notificaciones y dashboards diferenciados por rol.
+
+El proyecto continúa siendo extensible: se pueden incorporar moderación avanzada, carga directa de imágenes, paginación, pruebas automatizadas, métricas de uso y reglas de seguridad adicionales para un entorno productivo de mayor escala.
