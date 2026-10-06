@@ -148,6 +148,7 @@ function getCalendarEvents(favorites) {
 export default function PersonalAgenda({
   initialFavorites,
   followedFanbases = [],
+  memberFanbases = [],
   children,
 }) {
   const { favorites, isLoading } = useFavorites();
@@ -394,6 +395,20 @@ export default function PersonalAgenda({
               empezar a seguirla.
             </div>
           )}
+          {memberFanbases.length ? (
+            <div className="mt-8 border-t border-[#F2B8CF] pt-6">
+              <h3 className="text-xl font-semibold text-[#5C1F3A]">Fanbases de las que sos parte</h3>
+              <div className="mt-4 grid gap-4">
+                {memberFanbases.map((fanbase) => (
+                  <Link className="block rounded-2xl border border-[#F2B8CF] bg-white p-4 transition hover:border-[#D985A5]" href={`/fanbases/${fanbase.id}`} key={fanbase.id}>
+                    <h4 className="font-semibold text-[#5C1F3A]">{fanbase.name}</h4>
+                    <p className="mt-1 text-sm text-[#8A5468]">Fanbase de {fanbase.kpopGroup}</p>
+                    <p className="mt-2 text-xs text-[#8A5468]">{[fanbase.city, fanbase.country].filter(Boolean).join(", ")}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
         </div>
       </section>

@@ -417,13 +417,13 @@ export default async function FanbaseDetailPage({ params }) {
             const videoEmbedUrl = getVideoEmbedUrl(post.linkUrl);
 
             return (
-                <article className="rounded-2xl border border-[#F2B8CF] bg-white p-5 sm:p-6" key={post.id}>
+                <article className="rounded-2xl border border-[#F2B8CF] bg-white p-4" key={post.id}>
                   <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
                     <span className="rounded-full border border-[#F2B8CF] bg-white px-3 py-1 text-[#823038]">{FANBASE_POST_CATEGORIES[post.category]}</span>
                     <time className="ml-auto text-[#8A5468]" dateTime={post.createdAt || undefined}>{formatPostDate(post.createdAt)}</time>
                   </div>
-                  <h3 className="mt-4 text-xl font-semibold text-[#5C1F3A]">{post.title}</h3>
-                  <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#754B5B]">{post.body}</p>
+                  <h3 className="mt-3 text-lg font-semibold text-[#5C1F3A]">{post.title}</h3>
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[#754B5B]">{post.body}</p>
                   {videoEmbedUrl ? (
                     <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl bg-[#0D1821]">
                       <iframe
@@ -437,8 +437,12 @@ export default async function FanbaseDetailPage({ params }) {
                       />
                     </div>
                   ) : post.linkUrl ? (
-                    <a className="mt-4 inline-block text-sm font-semibold text-[#823038] underline underline-offset-2 hover:text-[#5C1F3A]" href={post.linkUrl} rel="noopener noreferrer" target="_blank">
-                      Abrir enlace
+                    <a className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#F2B8CF] bg-[#FFE4F3] px-4 py-2.5 text-sm font-semibold text-[#823038] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#FAD1E3] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0567A]" href={post.linkUrl} rel="noopener noreferrer" target="_blank">
+                      <span>Abrir enlace</span>
+                      <svg aria-hidden="true" className="size-4" fill="none" viewBox="0 0 24 24">
+                        <path d="M13.5 5H19v5.5M19 5l-8.5 8.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+                        <path d="M18 13v4.5a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 5 17.5v-10A1.5 1.5 0 0 1 6.5 6H11" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+                      </svg>
                     </a>
                   ) : null}
                   <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#F2B8CF] pt-3">

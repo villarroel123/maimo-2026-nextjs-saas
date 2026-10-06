@@ -18,6 +18,13 @@
     --narabi-primary: #823038;
     --narabi-ink: #0D1821;
     --narabi-line: rgb(130 48 56 / 0.28);
+    --narabi-shadow-color: 194 91 132;
+  }
+
+  *,
+  *::before,
+  *::after {
+    --tw-shadow-color: rgb(var(--narabi-shadow-color) / 0.28);
   }
 
   html {

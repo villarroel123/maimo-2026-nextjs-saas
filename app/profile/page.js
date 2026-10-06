@@ -10,7 +10,7 @@ import { getFavoriteAgendaForUser } from "@/lib/favorites/favorites";
 import { updateEmailNotificationPreference } from "@/lib/notifications/notifications";
 import { getCurrentUserProfile, updateUserProfile } from "@/lib/users/users";
 import { getUserParticipationHistory } from "@/lib/users/participation";
-import { getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
+import { getFanbasesForUser, getFollowedFanbasesForUser } from "@/lib/fanbases/fanbases";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +39,9 @@ export default async function ProfilePage() {
     getFollowedFanbasesForUser(user.uid),
     getUserParticipationHistory(user.uid),
   ]);
+  const memberFanbases = profile?.user_type === "admin"
+    ? await getFanbasesForUser(user.uid)
+    : [];
   const displayName = profile?.displayName || user.name || user.email?.split("@")[0] || "Fan de Narabi";
   const avatarUrl = profile?.photoURL || user.picture || "";
 
@@ -184,6 +187,7 @@ export default async function ProfilePage() {
         <PersonalAgenda
           initialFavorites={initialFavorites}
           followedFanbases={followedFanbases}
+          memberFanbases={memberFanbases}
         >
           <ParticipationHistory events={participationEvents} />
         </PersonalAgenda>

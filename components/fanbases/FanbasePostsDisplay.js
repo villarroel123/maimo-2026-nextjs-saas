@@ -38,7 +38,7 @@ export default function FanbasePostsDisplay({ count, composer, children }) {
           Esta fanbase todavía no tiene publicaciones.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4" id="fanbase-post-list">
+        <div className="mt-6 grid gap-4 md:grid-cols-2" id="fanbase-post-list">
           {visiblePosts}
         </div>
       )}

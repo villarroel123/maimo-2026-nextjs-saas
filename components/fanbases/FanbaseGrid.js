@@ -92,10 +92,10 @@ export default function FanbaseGrid({ fanbases }) {
           <p className="mt-2 text-sm text-[#68747B]">Probá con otro nombre o grupo de K-pop.</p>
         </div>
       ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleFanbases.map((fanbase) => (
             <article
-              className="group overflow-hidden border border-[#0D1821]/25 bg-[#EEEEEE] shadow-[0_18px_32px_-28px_rgba(13,24,33,0.7)] transition duration-300 hover:-translate-y-1 hover:border-[#823038] hover:shadow-[0_24px_38px_-25px_rgba(13,24,33,0.72)]"
+              className="group relative overflow-hidden rounded-[1.75rem] border border-[#F8D7E5] bg-gradient-to-b from-white via-white to-[#FFF5FA] shadow-[0_10px_28px_-16px_rgba(194,91,132,0.36)] transition duration-300 hover:-translate-y-1 hover:border-[#E9A9C2] hover:shadow-[0_18px_36px_-16px_rgba(194,91,132,0.42)]"
               key={fanbase.id}
             >
               <Link
@@ -103,10 +103,10 @@ export default function FanbaseGrid({ fanbases }) {
                 className="block overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#823038]"
                 href={`/fanbases/${fanbase.id}`}
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-white">
+                <div className="relative aspect-[5/3] overflow-hidden bg-[#FFF5FA]">
                   <Image
                     alt={`Imagen de la fanbase de ${fanbase.kpopGroup}`}
-                    className="object-cover object-center transition duration-500 group-hover:scale-105 group-hover:grayscale"
+                    className="object-cover object-center transition duration-500 group-hover:scale-105"
                     fill
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     src={getFanbaseImage(fanbase)}
@@ -114,14 +114,15 @@ export default function FanbaseGrid({ fanbases }) {
                 </div>
               </Link>
 
-              <div className="border-t border-[#0D1821]/20 px-5 py-5 text-center">
-                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.17em] text-[#823038]">Fanbase</p>
-                <h2 className="mt-2 text-xl text-[#0D1821]">{fanbase.kpopGroup}</h2>
-                <p className="mx-auto mt-3 max-w-xs text-xs leading-5 text-[#50606B]">
+              <div className="relative border-t border-[#F8D7E5] px-5 pb-5 pt-4 text-center">
+                <span aria-hidden="true" className="absolute right-4 top-3 text-lg text-[#E9A9C2] transition duration-300 group-hover:scale-125 group-hover:rotate-12">♡</span>
+                <p className="mx-auto inline-flex rounded-full bg-[#FFF0F6] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#A34E70]">Fanbase</p>
+                <h2 className="mt-2 text-xl font-semibold text-[#5C1F3A]">{fanbase.kpopGroup}</h2>
+                <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-[#765565]">
                   {fanbase.description || `Comunidad de fans de ${fanbase.kpopGroup} que organiza fanprojects.`}
                 </p>
                 <Link
-                  className="mt-5 inline-flex rounded-full border border-[#0D1821]/60 px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#0D1821] transition hover:border-[#823038] hover:bg-[#823038] hover:text-[#EEEEEE] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
+                  className="mt-4 inline-flex rounded-full border border-[#D98BA9] bg-[#D98BA9] px-5 py-2 text-[0.68rem] font-semibold tracking-[0.04em] text-white shadow-[0_5px_12px_-6px_rgba(130,48,56,0.8)] transition hover:-translate-y-0.5 hover:border-[#A34E70] hover:bg-[#A34E70] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#823038]"
                   href={`/fanbases/${fanbase.id}`}
                 >
                   Conocer comunidad

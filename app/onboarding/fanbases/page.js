@@ -38,7 +38,7 @@ export default async function ChooseFanbasesPage({ searchParams }) {
           <input name="next" type="hidden" value={next} />
           <div className="grid gap-3 sm:grid-cols-2">
             {fanbases.map((fanbase) => (
-              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#F2B8CF] p-4 transition hover:bg-[#FFF7FB]" key={fanbase.id}>
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[#FFE4F3] bg-white/80 p-3 shadow-[0_5px_16px_-9px_#FFE4F3] transition hover:bg-[#FFF7FB] hover:shadow-[0_8px_20px_-8px_#FFE4F3]" key={fanbase.id}>
                 <input className="size-4 accent-[#823038]" defaultChecked={followedFanbases.some((item) => item.id === fanbase.id)} name="fanbaseId" type="checkbox" value={fanbase.id} />
                 <span><strong className="block text-sm">{fanbase.kpopGroup}</strong><span className="text-xs text-[#8A5468]">{fanbase.name}</span></span>
               </label>
